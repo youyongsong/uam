@@ -1,2 +1,0 @@
-# uam
-Universal application manager.

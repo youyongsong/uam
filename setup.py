@@ -20,6 +20,7 @@ AUTHOR = 'YongSong You'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
+    'click==6.7'
     # 'requests', 'maya', 'records',
 ]
 
@@ -87,7 +88,7 @@ setup(
     # py_modules=['mypackage'],
 
     entry_points={
-        'console_scripts': ['mycli=mymodule:cli'],
+        'console_scripts': ['uam=uam.cli:uam'],
     },
     install_requires=REQUIRED,
     include_package_data=True,
