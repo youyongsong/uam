@@ -20,7 +20,7 @@ AUTHOR = 'YongSong You'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'click==6.7'
+    'click==6.7', 'pyyaml==3.12', 'jinja2==2.9.6', 'peewee==2.10.2',
     # 'requests', 'maya', 'records',
 ]
 
@@ -31,8 +31,8 @@ REQUIRED = [
 here = os.path.abspath(os.path.dirname(__file__))
 
 # Import the README and use it as the long-description.
-# Note: this will only work if 'README.rst' is present in your MANIFEST.in file!
-with io.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+# Note: this will only work if 'README.md' is present in your MANIFEST.in file!
+with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = '\n' + f.read()
 
 # Load the package's __version__.py module as a dictionary.
