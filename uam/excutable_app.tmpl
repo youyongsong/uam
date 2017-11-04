@@ -1,0 +1,95 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+import os
+import json
+import getopt
+import sys
+from sys import platform
+
+import docker
+import dockerpty
+
+
+def resolve_path(path):
+    return os.path.expandvars(os.path.expanduser(path))
+
+
+client = docker.from_env()
+docker_kwargs = docker.utils.kwargs_from_env()
+docker_kwargs['version'] = 'auto'
+raw_client = docker.APIClient(**docker_kwargs)
+
+
+# default options
+options = {
+    'version': client.api._version,
+    'auto_remove': True,
+    'tty': True,
+    'pid_mode': 'host',
+    'privileged': True,
+    'stdin_open': True
+}
+
+
+# app related options
+options['image'] = '{{ app.image }}'
+options['environment'] = {{ app.environments }}
+options['entrypoint'] = '{{ entrypoint.container_entrypoint }}'
+options['command'] = '{{ entrypoint.container_arguments }}'
+options['volumes'] = {}
+{% for v in volumes %}
+try:
+    vol = client.volumes.get('{{ v.name }}')
+except docker.errors.NotFound:
+    vol = client.volumes.create(name='{{ v.name }}',
+                                labels={'app_name': '{{ app.source }}',
+                                        'uam': 'uam'})
+options['volumes'][vol.name] = {
+    'bind': '{{ v.path }}',
+    'mode': 'rw'
+}
+{% endfor %}
+{% for c in configs %}
+host_path = resolve_path('{{ c.host_path }}')
+options['volumes'][host_path] = {
+    'bind': '{{ c.container_path }}',
+    'mode': 'rw'
+}
+{% endfor %}
+
+
+# environment related options
+cur_path = os.path.abspath(os.getcwd())
+options['volumes'][cur_path] = {
+    'bind': os.path.join('/uam', os.path.basename(cur_path)),
+    'mode': 'rw'
+}
+options['working_dir'] = os.path.join('/uam', os.path.basename(cur_path))
+if platform == "linux" or platform == "linux2":
+    options['network_mode'] = 'host'
+
+
+# command args related options
+args = sys.argv
+args.pop(0)
+if platform != "linux" and platform != "linux2":
+    while '--uam-port' in args:
+        idx = args.index('--uam-port')
+        args.pop(idx)
+        try:
+            port = args.pop(idx, '').split(':')
+            if len(port) == 1:
+                host_port = container_port = port[0]
+            else:
+                host_port, container_port = port[:2]
+            if 'ports' not in options:
+                options['ports'] = {}
+            options['ports'][container_port] = host_port
+        except IndexError:
+            pass
+options['command'] = options['command'] + ' ' + ' '.join(args)
+
+
+container = raw_client.create_container(
+    **docker.models.containers._create_container_args(options))
+dockerpty.start(raw_client, container)

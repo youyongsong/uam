@@ -1,0 +1,20 @@
+version: "0.0.1"
+description: offical python app.
+image: "python:3"
+entrypoints:
+  python:
+    container_entrypoint: python
+  pip:
+    container_entrypoint: pip
+
+configs:
+  - host_path: ~/.pip
+    container_path: /root/.pip
+
+volumes:
+  - path: /usr/local/lib/python3.6/site-packages
+  - path: /usr/local/bin
+
+environments:
+  a: 1
+  b: 2

@@ -4,7 +4,7 @@ import json
 from peewee import (Model, ForeignKeyField, CharField,
                     TextField, BooleanField)
 
-from uam.db import db
+from uam.settings import db
 
 
 APP_SOURCE_TYPES = (
@@ -38,7 +38,7 @@ class App(Model):
     description = TextField(default='')
     image = TextField()
     environments = JSONField(default='{}')
-    status = CharField(max_length=24)
+    status = CharField(max_length=24, default='active')
 
     class Meta:
         database = db
@@ -49,18 +49,21 @@ class App(Model):
 
 class EntryPoint(Model):
     alias = CharField(max_length=512)
-    app = ForeignKeyField(App, related_name='entrypoints', unique=True)
+    app = ForeignKeyField(App, related_name='entrypoints')
     container_entrypoint = CharField(max_length=512)
     container_arguments = CharField(max_length=512, default='')
-    enabled = BooleanField()
+    enabled = BooleanField(default=True)
 
     class Meta:
         database = db
+        indexes = (
+            (('alias', 'app'), True),
+        )
 
 
 class Volume(Model):
     name = CharField(primary_key=True)
-    app = ForeignKeyField(App, related_name='volumes', unique=True)
+    app = ForeignKeyField(App, related_name='volumes')
     path = TextField()
 
     class Meta:
@@ -68,9 +71,12 @@ class Volume(Model):
 
 
 class Config(Model):
-    app = ForeignKeyField(App, related_name='configs', unique=True)
+    app = ForeignKeyField(App, related_name='configs')
     host_path = TextField()
     container_path = TextField()
 
     class Meta:
         database = db
+        indexes = (
+            (('app', 'container_path'), True),
+        )
