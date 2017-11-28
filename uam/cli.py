@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import click
 
-from uam.core import initialize
+from uam.app_service import initialize, install_app
+from uam.exceptions import EntryPointConflict
 
 
 '''
 Todo Commands:
+- uninstall <app>
+- active <app>  # active the app's entrypoints (will override conflicted entrypoints)
 - info <app>
   Explore the infomation of specified app.
 - update <app>
@@ -15,6 +18,10 @@ Todo Commands:
 - regenerate <app>
   Regenerate the executable wrappers for the specified app. If no app
   specified, this command will regenerate all executable wrappers.
+- import <file-name>
+  import data from a file.
+- export <file-name>
+  export db to specified file.
 '''
 
 
@@ -31,13 +38,22 @@ def init():
 
 
 @click.command()
-def import_db():
-    click.echo("Not implemented yet...")
-
-
-@click.command()
-def export_db():
-    click.echo("Not implemented yet...")
+@click.argument("app_name")
+def install(app_name):
+    click.echo("Installing app {}".format(app_name))
+    try:
+        install_app(app_name)
+    except EntryPointConflict as exc:
+        val = click.prompt("Commands {} already exist. "
+                           "Type 'y' to override them, 'n' to ignore them"
+                           .format(' '.join(exc.conflicted_entrypoints)))
+        if val == 'y':
+            install_app(app_name, override_entrypoints=True)
+        else:
+            return
+    click.echo("Successfully installed {}".format(app_name))
+    click.echo("The following commands are available now: \n{}")
 
 
 uam.add_command(init)
+uam.add_command(install)
