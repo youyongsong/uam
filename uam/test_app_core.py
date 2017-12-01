@@ -19,14 +19,16 @@ def test_create_app():
             'image': 'index.alauda.cn/library/python:2',
             'environments': {'a': 1, 'b': 2},
             'version': '0.0.1',
-            'entrypoints': {
-                'python': {
+            'entrypoints': [
+                {
+                    'alias': 'python',
                     'container_entrypoint': '/usr/local/bin/python'
                 },
-                'pip': {
+                {
+                    'alias': 'pip',
                     'container_entrypoint': '/usr/local/bin/pip'
                 }
-            },
+            ],
             'volumes': [{'path': '/usr/local/bin'},
                         {'path': '/usr/local/lib/python3.6/site-packages'}],
             'configs': [
@@ -36,8 +38,7 @@ def test_create_app():
                 }
             ]
         }
-        app_id = create_app(test_db, app_data)
-        app = App.get(App.id == app_id)
+        app = create_app(test_db, app_data)
         assert app.status == 'active'
         assert app.environments == {'a': 1, 'b': 2}
         assert len(app.configs) == 1

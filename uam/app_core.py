@@ -2,6 +2,7 @@
 import uuid
 
 from uam.app import App, EntryPoint, Volume, Config
+from uam.exceptions import AppAlreadyExist
 from uam.utils import dict_add
 
 
@@ -10,6 +11,9 @@ def create_app(db, app_data, override_entrypoints=True):
     volumes = app_data.pop('volumes', [])
     configs = app_data.pop('configs', [])
     with db.atomic():
+        if App.select().where((App.source == app_data['source']) &
+                              (App.source_type == app_data['source_type'])):
+            raise AppAlreadyExist
         app = App.create(**app_data)
 
         if entrypoints:
@@ -35,7 +39,7 @@ def create_app(db, app_data, override_entrypoints=True):
             configs = [dict_add(config, {'app': app.id}) for config in configs]
             Config.insert_many(configs).execute()
 
-    return app.id
+    return app
 
 
 def list_apps():

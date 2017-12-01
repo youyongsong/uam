@@ -2,27 +2,7 @@
 import click
 
 from uam.app_service import initialize, install_app
-from uam.exceptions import EntryPointConflict
-
-
-'''
-Todo Commands:
-- uninstall <app>
-- active <app>  # active the app's entrypoints (will override conflicted entrypoints)
-- info <app>
-  Explore the infomation of specified app.
-- update <app>
-  Update the app to a higer version.
-- doctor
-  Examine the system to see if there is something misconfiged.
-- regenerate <app>
-  Regenerate the executable wrappers for the specified app. If no app
-  specified, this command will regenerate all executable wrappers.
-- import <file-name>
-  import data from a file.
-- export <file-name>
-  export db to specified file.
-'''
+from uam.exceptions import AppAlreadyExist, EntryPointConflict
 
 
 @click.group()
@@ -42,17 +22,27 @@ def init():
 def install(app_name):
     click.echo("Installing app {}".format(app_name))
     try:
-        install_app(app_name)
+        app = install_app(app_name)
     except EntryPointConflict as exc:
         val = click.prompt("Commands {} already exist. "
                            "Type 'y' to override them, 'n' to ignore them"
                            .format(' '.join(exc.conflicted_entrypoints)))
         if val == 'y':
-            install_app(app_name, override_entrypoints=True)
+            try:
+                app = install_app(app_name, override_entrypoints=True)
+            except AppAlreadyExist:
+                click.echo("{} already existed.".format(app_name))
+                return
         else:
             return
+    except AppAlreadyExist:
+        click.echo("{} already existed.".format(app_name))
+        return
     click.echo("Successfully installed {}".format(app_name))
-    click.echo("The following commands are available now: \n{}")
+
+    entrys = [entry.alias for entry in app.entrypoints]
+    click.echo("The following commands are available now: \n{}".format(
+        '\n'.join(['- {}'.format(entry) for entry in entrys])))
 
 
 uam.add_command(init)

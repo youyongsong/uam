@@ -32,8 +32,9 @@ def install_app(app_name, override_entrypoints=None):
         if conflicted:
             raise EntryPointConflict(conflicted)
 
-    app_id = create_app(db, app_data, override_entrypoints)
-    create_app_wrapper(App.get(App.id == app_id))
+    app = create_app(db, app_data, override_entrypoints)
+    create_app_wrapper(app)
+    return app
 
 
 def load_app_data(app_name):

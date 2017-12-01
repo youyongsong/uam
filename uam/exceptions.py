@@ -17,3 +17,9 @@ class MainfestInvalidYaml(Exception):
 
     def __init__(self):
         super(MainfestInvalidYaml, self).__init__("App's mainfest is not valid yaml format.")
+
+
+class AppAlreadyExist(Exception):
+
+    def __init__(self):
+        super(AppAlreadyExist, self).__init__("App alredy existed.")
