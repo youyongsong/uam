@@ -21,7 +21,8 @@ AUTHOR = 'YongSong You'
 # What packages are required for this module to be executed?
 REQUIRED = [
     'click==6.7', 'pyyaml==3.12', 'jinja2==2.9.6', 'peewee==2.10.2',
-    'docker==2.5.1', 'dockerpty==0.4.1'  # 'requests', 'maya', 'records',
+    'docker==2.5.1', 'dockerpty==0.4.1', 'daiquiri==1.2.1',
+    # 'requests', 'maya', 'records',
 ]
 
 # The rest you shouldn't have to touch too much :)

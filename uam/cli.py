@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import click
 
-from uam.app_service import initialize, install_app
-from uam.exceptions import AppAlreadyExist, EntryPointConflict
+from uam.app_service import initialize, install_app, uninstall_app
+from uam.exceptions import AppAlreadyExist, EntryPointConflict, AppNotFound
 
 
 @click.group()
@@ -45,5 +45,19 @@ def install(app_name):
         '\n'.join(['- {}'.format(entry) for entry in entrys])))
 
 
+@click.command()
+@click.argument("app_name")
+def uninstall(app_name):
+    click.echo("Uninstalling app {}".format(app_name))
+    try:
+        uninstall_app(app_name)
+    except AppNotFound:
+        click.echo("App {} not found.".format(app_name))
+        raise
+        return
+    click.echo("Successfully uninstalled {}.".format(app_name))
+
+
 uam.add_command(init)
 uam.add_command(install)
+uam.add_command(uninstall)
