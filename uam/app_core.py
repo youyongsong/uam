@@ -2,7 +2,7 @@
 import uuid
 
 from uam.app import App, EntryPoint, Volume, Config
-from uam.exceptions import AppAlreadyExist
+from uam.exceptions import AppAlreadyExist, AppNotFound
 from uam.utils import dict_add
 
 
@@ -42,11 +42,20 @@ def create_app(db, app_data, override_entrypoints=True):
     return app
 
 
+def delete_app(db, source_type, source):
+    with db.atomic():
+        try:
+            app = App.get(App.source_type == source_type, App.source == source)
+        except App.DoesNotExist:
+            raise AppNotFound('{}::{}'.format(source_type, source))
+        app.delete_instance(recursive=True)
+
+
 def list_apps():
     pass
 
 
-def view_app(source_type, source):
+def view_app(db, source_type, source):
     pass
 
 
@@ -57,3 +66,27 @@ def get_conflicted_entrypoints(db, entrypoints):
             (EntryPoint.alias << [item['alias'] for item in entrypoints]) &
             (EntryPoint.enabled == True))
     ]
+
+
+def get_volumes(db, source_type, source):
+    with db.atomic():
+        try:
+            app = App.get(App.source_type == source_type, App.source == source)
+        except App.DoesNotExist:
+            raise AppNotFound('{}::{}'.format(source_type, source))
+        return [
+            vol.name for vol in Volume.select().where(Volume.app == app.id)
+        ]
+
+
+def get_active_entrypoints(db, source_type, source):
+    with db.atomic():
+        try:
+            app = App.get(App.source_type == source_type, App.source == source)
+        except App.DoesNotExist:
+            raise AppNotFound('{}::{}'.format(source_type, source))
+        return [
+            e.alias
+            for e in EntryPoint.select().where((EntryPoint.app == app.id) &
+                                               (EntryPoint.enabled == True))
+        ]

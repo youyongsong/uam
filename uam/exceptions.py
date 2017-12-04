@@ -23,3 +23,9 @@ class AppAlreadyExist(Exception):
 
     def __init__(self):
         super(AppAlreadyExist, self).__init__("App alredy existed.")
+
+
+class AppNotFound(Exception):
+
+    def __init__(self, app_name):
+        super(AppNotFound, self).__init__("App {} not found".format(app_name))
