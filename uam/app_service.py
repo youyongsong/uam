@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
 import stat
 import sys
 
 import docker
-import daiquiri
 import yaml
 from jinja2 import Template
 
@@ -19,7 +19,7 @@ from .exceptions import (EntryPointConflict, AppSourceNotExist,
                          MainfestInvalidYaml)
 
 
-logger = daiquiri.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def initialize():
@@ -114,7 +114,7 @@ def delete_wrappers(entrypoints):
         logger.info('Removing wrapper {} from {}...'.format(entry_name,
                                                             target_path))
         os.remove(target_path)
-        logger.info('{} was removed.'.format(entry_name))
+        logger.info('{} removed.'.format(entry_name))
 
 
 def delete_volumes(volumes):
@@ -126,4 +126,4 @@ def delete_volumes(volumes):
             logger.warning('volume {} not found.'.format(v))
         else:
             volume.remove()
-            logger.info('{} was removed.'.format(v))
+            logger.info('{} removed.'.format(v))
