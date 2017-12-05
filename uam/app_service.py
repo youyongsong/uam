@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import stat
+import sys
 
 import docker
 import daiquiri
@@ -88,7 +89,8 @@ def create_app_wrapper(app):
                 'app': app,
                 'entrypoint': entry,
                 'volumes': app.volumes,
-                'configs': app.configs
+                'configs': app.configs,
+                'python_path': sys.executable
             })
             f_handler.write(content.encode('utf-8'))
 
