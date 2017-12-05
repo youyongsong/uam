@@ -51,6 +51,15 @@ def delete_app(db, source_type, source):
         app.delete_instance(recursive=True)
 
 
+def get_app(db, source_type, source):
+    with db.atomic():
+        try:
+            app = App.get(App.source_type == source_type, App.source == source)
+        except App.DoesNotExist:
+            raise AppNotFound('{}::{}'.format(source_type, source))
+    return app
+
+
 def list_apps():
     pass
 
