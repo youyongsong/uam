@@ -60,12 +60,18 @@ def get_app(db, source_type, source):
     return app
 
 
-def list_apps():
-    pass
-
-
-def view_app(db, source_type, source):
-    pass
+def list_entrypoints(db):
+    return [
+        {
+            'alias': e.alias,
+            'enabled': e.enabled,
+            'entrypoint': e.container_entrypoint,
+            'arguments': e.container_arguments,
+            'app_source': e.app.source,
+            'app_source_type': e.app.source_type,
+        }
+        for e in EntryPoint.select().order_by(EntryPoint.app)
+    ]
 
 
 def get_conflicted_entrypoints(db, entrypoints):
