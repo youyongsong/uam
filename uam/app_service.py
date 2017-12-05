@@ -14,7 +14,7 @@ from uam.utils import dict_add
 from .app import App, EntryPoint, Volume, Config
 from .app_core import (create_app, get_conflicted_entrypoints,
                        delete_app, get_active_entrypoints, get_volumes,
-                       get_app)
+                       get_app, list_entrypoints)
 from .exceptions import (EntryPointConflict, AppSourceNotExist,
                          MainfestInvalidYaml)
 
@@ -59,6 +59,10 @@ def uninstall_app(app_name):
     delete_app(db, source_type, source)
     delete_wrappers(active_entrypoints)
     delete_volumes(volumes)
+
+
+def retrieve_alias():
+    return list_entrypoints(db)
 
 
 def load_app_data(app_name):

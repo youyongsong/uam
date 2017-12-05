@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import click
+from tabulate import tabulate
 
-from uam.app_service import initialize, install_app, uninstall_app, info_app
+from uam.app_service import (initialize, install_app, uninstall_app, info_app,
+                             retrieve_alias)
 from uam.exceptions import AppAlreadyExist, EntryPointConflict, AppNotFound
 
 
@@ -68,14 +70,30 @@ def info(app_name):
     click.echo(display_app(app))
 
 
+@click.command('list')
+@click.option("--lst", "-l", is_flag=True, default=False)
+def list_alias(lst):
+    aliases = retrieve_alias()
+    if lst:
+        click.echo(display_entrypoints(aliases))
+    else:
+        click.echo(' '.join([e['alias'] for e in aliases]))
+    return
+
+
 uam.add_command(init)
 uam.add_command(install)
 uam.add_command(uninstall)
 uam.add_command(info)
+uam.add_command(list_alias)
 
 
 def display_app(app):
-    content = ''
+    content = '{}\n\n'.format(app.description)
+
+    content += 'version: {}\n'.format(app.version)
+    content += 'image: {}\n'.format(app.image)
+    content += '\n'
 
     content += 'entrypoints:\n'
     for entry in app.entrypoints:
@@ -96,5 +114,19 @@ def display_app(app):
     content += 'volumes:\n'
     for vol in app.volumes:
         content += '{} is mount on {}\n'.format(vol.name, vol.path)
+    content += '\n'
+
+    content += 'environments:\n'
+    for k, v in app.environments.items():
+        content += '{}={}\n'.format(k, v)
 
     return content.strip()
+
+
+def display_entrypoints(entrypoints):
+    table = [
+        [e['alias'], '{}::{}'.format(e['app_source_type'], e['app_source'])]
+        for e in entrypoints if e['enabled']
+    ]
+    headers = ['wrapper', 'app']
+    return tabulate(table, headers, tablefmt="rst")
