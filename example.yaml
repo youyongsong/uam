@@ -1,6 +1,6 @@
 version: "0.0.1"
 description: offical python app.
-image: "python:3"
+image: "python:3.6-alpine"
 entrypoints:
   python:
     container_entrypoint: python

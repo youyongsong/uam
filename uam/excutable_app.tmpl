@@ -5,6 +5,7 @@ import json
 import getopt
 import sys
 from sys import platform
+import subprocess
 
 import docker
 import dockerpty
@@ -18,6 +19,14 @@ client = docker.from_env()
 docker_kwargs = docker.utils.kwargs_from_env()
 docker_kwargs['version'] = 'auto'
 raw_client = docker.APIClient(**docker_kwargs)
+
+
+try:
+    client.images.get('{{ app.image }}')
+except docker.errors.ImageNotFound:
+    print('docker image {} not found locally, trying to pull it...'.format('{{ app.image }}'))
+    print('docker pull {{ app.image }}')
+    subprocess.run('docker pull {{ app.image }}', shell=True, check=True)
 
 
 # default options
