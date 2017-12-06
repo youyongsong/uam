@@ -10,10 +10,15 @@ def str2bool(v):
     return v and v.lower() in ('yes', 'true', 't', '1')
 
 
-DB_PATH = "/usr/local/uam/data.db"
+HOME_DIR = os.path.expanduser('~')
+UAM_PATH = os.path.join(HOME_DIR, '.uam')
+if not os.path.isdir(UAM_PATH):
+    os.mkdir(UAM_PATH)
+
+DB_PATH = os.path.join(UAM_PATH, "uam.db")
 db = SqliteDatabase(DB_PATH)
 
-BIN_PATH = '/usr/local/uam/bin/'
+BIN_PATH = os.path.join(UAM_PATH, 'bin')
 
 docker_client = docker.from_env()
 

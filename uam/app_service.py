@@ -103,7 +103,7 @@ def create_app_wrapper(app):
                 'configs': app.configs,
                 'python_path': sys.executable
             })
-            f_handler.write(content.encode('utf-8'))
+            f_handler.write(content)
 
         st = os.stat(target_path)
         os.chmod(target_path, st.st_mode | stat.S_IEXEC)
@@ -117,8 +117,12 @@ def delete_wrappers(entrypoints):
         target_path = os.path.join(BIN_PATH, entry_name)
         logger.info('Removing wrapper {} from {}...'.format(entry_name,
                                                             target_path))
-        os.remove(target_path)
-        logger.info('{} removed.'.format(entry_name))
+        try:
+            os.remove(target_path)
+        except FileNotFoundError:
+            logger.info('{} not found'.format(target_path))
+        else:
+            logger.info('{} removed.'.format(target_path))
 
 
 def delete_volumes(volumes):
