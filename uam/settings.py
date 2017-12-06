@@ -3,6 +3,7 @@ import logging.config
 import os
 
 import docker
+from colorlog import ColoredFormatter
 from peewee import SqliteDatabase
 
 
@@ -36,17 +37,45 @@ class RequireDebugFalse(logging.Filter):
         return not DEBUG
 
 
+LOG_COLORS = {
+    'DEBUG':    'white',
+    'INFO':     'white',
+    'WARNING':  'yellow',
+    'ERROR':    'red',
+    'CRITICAL': 'bold_red',
+}
+
+
+LOG_PREFIXS = {
+    'DEBUG':    '⚙',
+    'INFO':     '⚙',
+    'WARNING':  '⚠️',
+    'ERROR':    '💢',
+    'CRITICAL': '🚨',
+}
+
+
+class CustomedFormatter(ColoredFormatter):
+
+    def format(self, record):
+        message = super(CustomedFormatter, self).format(record)
+        prefix = LOG_PREFIXS.get(record.levelname)
+        return f'  {prefix}   {message}'
+
+
 LOGGING = {
     'version': 1,
     'formatters': {
         'prod': {
-            '()': logging.Formatter,
-            'format': '%(message)s'
+            '()': CustomedFormatter,
+            'format': '%(log_color)s%(message)s',
+            'log_colors': LOG_COLORS
         },
         'dev': {
-            '()': logging.Formatter,
-            'format': ('|%(levelname)-8s|%(asctime)-25s|%(threadName)-11s '
-                       '|%(name)s:%(lineno)d %(message)s')
+            '()': CustomedFormatter,
+            'format': ('%(log_color)s|%(levelname)-8s|%(asctime)-25s'
+                       '|%(threadName)-11s|%(name)s:%(lineno)d %(message)s'),
+            'log_colors': LOG_COLORS
         }
     },
     'filters': {
