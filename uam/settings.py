@@ -33,6 +33,12 @@ docker_client = docker.from_env()
 DEBUG = str2bool(os.getenv('UAM_DEBUG', 'false'))
 
 
+CONTAINER_META_LABELS = {
+    'provider': 'uam',
+    'provider description': 'universal application manager.',
+}
+
+
 class RequireDebugTrue(logging.Filter):
     def filter(self, record):
         return DEBUG

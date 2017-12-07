@@ -5,6 +5,7 @@ import json
 import sys
 from sys import platform
 import subprocess
+import uuid
 
 import docker
 import dockerpty
@@ -27,6 +28,12 @@ except docker.errors.ImageNotFound:
     print('docker pull {{ app.image }}')
     subprocess.run('docker pull {{ app.image }}', shell=True, check=True)
 
+meta_labels = {
+    {% for k, v in meta_labels.items() %}
+    '{{ k }}': '{{ v }}',
+    {% endfor %}
+    'app': '{{ app.source_type}}::{{ app.source }}',
+}
 
 # default options
 options = {
@@ -35,8 +42,10 @@ options = {
     'tty': True,
     'pid_mode': 'host',
     'privileged': True,
-    'stdin_open': True
+    'stdin_open': True,
+    'name': f'uam-{uuid.uuid4()}'
 }
+
 
 
 # app related options
@@ -44,19 +53,23 @@ options['image'] = '{{ app.image }}'
 options['environment'] = {{ app.environments }}
 options['entrypoint'] = '{{ entrypoint.container_entrypoint }}'
 options['command'] = '{{ entrypoint.container_arguments }}'
+
 options['volumes'] = {}
 {% for v in volumes %}
+volume_labels = {
+    'mount_path': '{{ v.path }}'
+}
 try:
     vol = client.volumes.get('{{ v.name }}')
 except docker.errors.NotFound:
     vol = client.volumes.create(name='{{ v.name }}',
-                                labels={'app_name': '{{ app.source }}',
-                                        'uam': 'uam'})
+                                labels={**meta_labels, **volume_labels})
 options['volumes'][vol.name] = {
     'bind': '{{ v.path }}',
     'mode': 'rw'
 }
 {% endfor %}
+
 {% for c in configs %}
 host_path = resolve_path('{{ c.host_path }}')
 options['volumes'][host_path] = {
@@ -96,6 +109,14 @@ if platform != "linux" and platform != "linux2":
         except IndexError:
             pass
 options['command'] = options['command'] + ' ' + ' '.join(args)
+
+# add lables to container
+options['labels'] = {
+    **meta_labels,
+    **{
+        'command': options['entrypoint'] + ' ' + options['command']
+    }
+}
 
 
 container = raw_client.create_container(
