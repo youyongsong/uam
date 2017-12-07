@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import sys
+
 import click
 from tabulate import tabulate
 
 from uam.app_service import (initialize, install_app, uninstall_app, info_app,
-                             retrieve_alias)
+                             retrieve_alias, exec_shell)
 from uam.exceptions import AppAlreadyExist, EntryPointConflict, AppNotFound
 
 
@@ -81,11 +83,23 @@ def list_alias(lst):
     return
 
 
+@click.command('shell')
+@click.argument('app_name')
+@click.option("--uam-port")
+def shell(app_name, **kwargs):
+    ext_args = sys.argv[3:]
+    commands = ''
+    if ext_args:
+        commands = ' '.join(ext_args)
+    exec_shell(app_name, commands=commands)
+
+
 uam.add_command(init)
 uam.add_command(install)
 uam.add_command(uninstall)
 uam.add_command(info)
 uam.add_command(list_alias)
+uam.add_command(shell)
 
 
 def display_app(app):

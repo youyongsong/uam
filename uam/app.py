@@ -39,6 +39,7 @@ class App(Model):
     image = TextField()
     environments = JSONField(default='{}')
     status = CharField(max_length=24, default='active')
+    shell = CharField(max_length=128, default='sh')
 
     class Meta:
         database = db
