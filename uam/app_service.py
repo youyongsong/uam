@@ -10,8 +10,9 @@ import docker
 import yaml
 from jinja2 import Template
 
-from uam.settings import (db, DB_PATH, BIN_PATH, TEMP_PATH, docker_client,
-                          CONTAINER_META_LABELS)
+from uam.settings import (db, UAM_PATH, DB_PATH, BIN_PATH, TEMP_PATH,
+                          docker_client, CONTAINER_META_LABELS,
+                          GLOBAL_NETWORK_NAME)
 from uam.utils import dict_add
 
 from .app import App, EntryPoint, Volume, Config
@@ -26,10 +27,16 @@ logger = logging.getLogger(__name__)
 
 
 def initialize():
-    base_dir = os.path.dirname(DB_PATH)
-    if not os.path.exists(base_dir):
-        os.makedirs(base_dir)
+    if not os.path.exists(UAM_PATH):
+        logger.info(f"Creating uam's home path {UAM_PATH} ...")
+        os.makedirs(UAM_PATH)
     db.create_tables([App, EntryPoint, Volume, Config], safe=True)
+    try:
+        docker_client.networks.get(GLOBAL_NETWORK_NAME)
+    except docker.errors.NotFound:
+        logger.info(f'Creating docker network {GLOBAL_NETWORK_NAME} ...')
+        docker_client.networks.create(GLOBAL_NETWORK_NAME, driver="bridge",
+                                      labels=CONTAINER_META_LABELS)
 
 
 def install_app(app_name, override_entrypoints=None):
@@ -118,7 +125,8 @@ def create_app_wrapper(app):
                 'volumes': app.volumes,
                 'configs': app.configs,
                 'python_path': sys.executable,
-                'meta_labels': CONTAINER_META_LABELS
+                'meta_labels': CONTAINER_META_LABELS,
+                'network': GLOBAL_NETWORK_NAME,
             })
             f_handler.write(content)
 
@@ -140,7 +148,8 @@ def create_shell_wrapper(app):
             'volumes': app.volumes,
             'configs': app.configs,
             'python_path': sys.executable,
-            'meta_labels': CONTAINER_META_LABELS
+            'meta_labels': CONTAINER_META_LABELS,
+            'network': GLOBAL_NETWORK_NAME,
         })
         f_handler.write(content)
 

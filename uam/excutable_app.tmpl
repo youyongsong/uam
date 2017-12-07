@@ -9,6 +9,7 @@ import uuid
 
 import docker
 import dockerpty
+import netifaces as ni
 
 
 def resolve_path(path):
@@ -20,6 +21,12 @@ docker_kwargs = docker.utils.kwargs_from_env()
 docker_kwargs['version'] = 'auto'
 raw_client = docker.APIClient(**docker_kwargs)
 
+meta_labels = {
+    {% for k, v in meta_labels.items() %}
+    '{{ k }}': '{{ v }}',
+    {% endfor %}
+    'app': '{{ app.source_type}}::{{ app.source }}',
+}
 
 try:
     client.images.get('{{ app.image }}')
@@ -28,12 +35,12 @@ except docker.errors.ImageNotFound:
     print('docker pull {{ app.image }}')
     subprocess.run('docker pull {{ app.image }}', shell=True, check=True)
 
-meta_labels = {
-    {% for k, v in meta_labels.items() %}
-    '{{ k }}': '{{ v }}',
-    {% endfor %}
-    'app': '{{ app.source_type}}::{{ app.source }}',
-}
+try:
+    client.networks.get('{{ network }}')
+except docker.errors.NotFound:
+    print('network {{ network }} not found, creating it now ...')
+    client.networks.create('{{ network }}', driver="bridge",
+                           labels=meta_labels)
 
 # default options
 options = {
@@ -43,7 +50,7 @@ options = {
     'pid_mode': 'host',
     'privileged': True,
     'stdin_open': True,
-    'name': f'uam-{uuid.uuid4()}'
+    'name': f'uam-{uuid.uuid4()}',
 }
 
 
@@ -85,9 +92,21 @@ options['volumes'][cur_path] = {
     'bind': os.path.join('/uam', os.path.basename(cur_path)),
     'mode': 'rw'
 }
+
 options['working_dir'] = os.path.join('/uam', os.path.basename(cur_path))
+
 if platform == "linux" or platform == "linux2":
     options['network_mode'] = 'host'
+else:
+    options['network'] = '{{ network }}'
+
+if platform == 'darwin':
+    local_ip = None
+    if ni.AF_INET in ni.ifaddresses('en1'):
+        local_ip = ni.ifaddresses('en1')[ni.AF_INET][0]['addr']
+    else if ni.AF_INET in ni.ifaddresses('en0'):
+        local_ip = ni.ifaddresses('en0')[ni.AF_INET][0]['addr']
+    options['extra_hosts'] = {'localhost': local_ip}
 
 
 # command args related options
