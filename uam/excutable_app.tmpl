@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os
 import json
-import getopt
 import sys
 from sys import platform
 import subprocess
@@ -86,7 +85,7 @@ if platform != "linux" and platform != "linux2":
         idx = args.index('--uam-port')
         args.pop(idx)
         try:
-            port = args.pop(idx, '').split(':')
+            port = args.pop(idx).split(':')
             if len(port) == 1:
                 host_port = container_port = port[0]
             else:

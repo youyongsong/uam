@@ -20,6 +20,12 @@ DB_PATH = os.path.join(UAM_PATH, "uam.db")
 db = SqliteDatabase(DB_PATH)
 
 BIN_PATH = os.path.join(UAM_PATH, 'bin')
+if not os.path.exists(BIN_PATH):
+    os.makedirs(BIN_PATH)
+
+TEMP_PATH = os.path.join(UAM_PATH, '.temp')
+if not os.path.exists(TEMP_PATH):
+    os.makedirs(TEMP_PATH)
 
 docker_client = docker.from_env()
 
