@@ -30,7 +30,7 @@ def create_app(db, app_data, override_entrypoints=True):
 
         if volumes:
             volumes = [
-                dict_add(volume, {'name': str(uuid.uuid4()), 'app': app.id})
+                dict_add(volume, {'name': f'uam-{uuid.uuid4()}', 'app': app.id})
                 for volume in volumes
             ]
             Volume.insert_many(volumes).execute()

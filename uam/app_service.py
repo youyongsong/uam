@@ -10,7 +10,8 @@ import docker
 import yaml
 from jinja2 import Template
 
-from uam.settings import db, DB_PATH, BIN_PATH, TEMP_PATH, docker_client
+from uam.settings import (db, DB_PATH, BIN_PATH, TEMP_PATH, docker_client,
+                          CONTAINER_META_LABELS)
 from uam.utils import dict_add
 
 from .app import App, EntryPoint, Volume, Config
@@ -116,7 +117,8 @@ def create_app_wrapper(app):
                 'entrypoint': entry,
                 'volumes': app.volumes,
                 'configs': app.configs,
-                'python_path': sys.executable
+                'python_path': sys.executable,
+                'meta_labels': CONTAINER_META_LABELS
             })
             f_handler.write(content)
 
@@ -137,7 +139,8 @@ def create_shell_wrapper(app):
             'entrypoint': {'container_entrypoint': app.shell},
             'volumes': app.volumes,
             'configs': app.configs,
-            'python_path': sys.executable
+            'python_path': sys.executable,
+            'meta_labels': CONTAINER_META_LABELS
         })
         f_handler.write(content)
 
