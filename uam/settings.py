@@ -38,6 +38,8 @@ CONTAINER_META_LABELS = {
     'provider description': 'universal application manager.',
 }
 
+GLOBAL_NETWORK_NAME = 'uam_global_network'
+
 
 class RequireDebugTrue(logging.Filter):
     def filter(self, record):

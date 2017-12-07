@@ -22,7 +22,7 @@ AUTHOR = 'YongSong You'
 REQUIRED = [
     'click==6.7', 'pyyaml==3.12', 'jinja2==2.9.6', 'peewee==2.10.2',
     'docker==2.5.1', 'dockerpty==0.4.1', 'tabulate==0.8.2',
-    'colorlog==3.1.0',
+    'colorlog==3.1.0', 'netifaces==0.10.6',
     # 'requests', 'maya', 'records',
 ]
 
