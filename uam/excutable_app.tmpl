@@ -6,6 +6,7 @@ import sys
 from sys import platform
 import subprocess
 import uuid
+import re
 
 import docker
 import dockerpty
@@ -54,12 +55,23 @@ options = {
 }
 
 
-
 # app related options
 options['image'] = '{{ app.image }}'
-options['environment'] = {{ app.environments }}
 options['entrypoint'] = '{{ entrypoint.container_entrypoint }}'
 options['command'] = '{{ entrypoint.container_arguments }}'
+
+options['environment'] = {}
+AUTO_ENV_PATTERN = re.compile(r'^\$\{(?P<env_name>.*)\}$')
+{% for k, v in app.environments.items() %}
+matched = AUTO_ENV_PATTERN.match('{{ v }}')
+if matched:
+    name = matched.groupdict().get('env_name')
+    val = os.getenv(name)
+    if val:
+        options['environment']['{{ k }}'] = val
+else:
+    options['environment']['{{ k }}'] = '{{ v }}'
+{% endfor %}
 
 options['volumes'] = {}
 {% for v in volumes %}
@@ -104,7 +116,7 @@ if platform == 'darwin':
     local_ip = None
     if ni.AF_INET in ni.ifaddresses('en1'):
         local_ip = ni.ifaddresses('en1')[ni.AF_INET][0]['addr']
-    else if ni.AF_INET in ni.ifaddresses('en0'):
+    elif ni.AF_INET in ni.ifaddresses('en0'):
         local_ip = ni.ifaddresses('en0')[ni.AF_INET][0]['addr']
     options['extra_hosts'] = {'localhost': local_ip}
 
