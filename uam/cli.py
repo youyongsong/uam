@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 
 import click
@@ -6,7 +5,9 @@ from tabulate import tabulate
 
 from uam.app_service import (initialize, install_app, uninstall_app, info_app,
                              retrieve_alias, exec_shell)
-from uam.exceptions import AppAlreadyExist, EntryPointConflict, AppNotFound
+from uam.exceptions import *
+
+from .cli_taps import taps
 
 
 @click.group()
@@ -94,6 +95,7 @@ def shell(app_name, **kwargs):
     exec_shell(app_name, commands=commands)
 
 
+uam.add_command(taps)
 uam.add_command(init)
 uam.add_command(install)
 uam.add_command(uninstall)

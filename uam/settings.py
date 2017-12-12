@@ -19,6 +19,10 @@ if not os.path.isdir(UAM_PATH):
 DB_PATH = os.path.join(UAM_PATH, "uam.db")
 db = SqliteDatabase(DB_PATH)
 
+TAPS_PATH = os.path.join(UAM_PATH, 'taps')
+if not os.path.exists(TAPS_PATH):
+    os.makedirs(TAPS_PATH)
+
 BIN_PATH = os.path.join(UAM_PATH, 'bin')
 if not os.path.exists(BIN_PATH):
     os.makedirs(BIN_PATH)
@@ -31,6 +35,15 @@ docker_client = docker.from_env()
 
 
 DEBUG = str2bool(os.getenv('UAM_DEBUG', 'false'))
+
+
+BUILTIN_TAPS = [
+    {
+        'alias': 'core',
+        'address': 'youyongsong/uam-core',
+        'priority': 10
+    }
+]
 
 
 CONTAINER_META_LABELS = {
