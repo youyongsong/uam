@@ -2,7 +2,7 @@
 import json
 
 from peewee import (Model, ForeignKeyField, CharField,
-                    TextField, BooleanField)
+                    TextField, BooleanField, IntegerField)
 
 from uam.settings import db
 
@@ -29,6 +29,12 @@ class JSONField(TextField):
 
     def python_value(self, value):
         return json.loads(value)
+
+
+class Taps(Model):
+    alias = CharField(max_length=128, unique=True)
+    address = CharField(max_length=2048, unique=True)
+    priority = IntegerField(default=0)
 
 
 class App(Model):
