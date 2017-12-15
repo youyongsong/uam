@@ -4,7 +4,7 @@ import os
 from uam.usecases.taps import list_taps
 from uam.usecases.exceptions import (AppExisted, FormulaNotFound,
                                      EntryPointsConflicted, AppEntityError,
-                                     UninstallAppNotFound)
+                                     UninstallAppNotFound, ExecAppNotFound)
 from uam.entities.app import (recognize_app_name, create_app,
                               deactive_entrypoints, generate_app_shims)
 from uam.entities.exceptions import RecognizeAppError, AppCreateError
@@ -70,3 +70,12 @@ def uninstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
     SystemGateway.delete_app_shims(shim_names)
     DockerServiceGateway.delete_volumes(vol_names)
     DatabaseGateway.delete_app(app_id)
+
+
+def exec_app(DatabaseGateway, SystemGateway, app_name, arguments=''):
+    try:
+        app = DatabaseGateway.get_app_detail(app_name)
+    except DatabaseGateway.AppNotExist:
+        raise ExecAppNotFound(app_name)
+    shim = generate_shell_shim(app)
+    SystemGateway.run_temporay_script(shim, arguments='')

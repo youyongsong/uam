@@ -90,7 +90,7 @@ setup(
     # py_modules=['mypackage'],
 
     entry_points={
-        'console_scripts': ['uam=uam.cli:uam'],
+        'console_scripts': ['uam=uam.interfaces.cli:uam'],
     },
     install_requires=REQUIRED,
     include_package_data=True,
