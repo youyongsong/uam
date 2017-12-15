@@ -44,6 +44,9 @@ BUILTIN_TAPS = [
         'priority': 10
     }
 ]
+FORMULA_FOLDER_NAME = 'Formula'
+
+FORMULA_EXTENSIONS = ['yaml', 'yml']
 
 
 CONTAINER_META_LABELS = {
@@ -52,6 +55,31 @@ CONTAINER_META_LABELS = {
 }
 
 GLOBAL_NETWORK_NAME = 'uam_global_network'
+
+
+class ErrorTypes:
+    USER_ERROR = "user_error"
+    SYSTEM_ERROR = "system_error"
+    UNKNOWN_ERROR = "unknown_error"
+
+
+class UamBaseException(Exception):
+    code = ''
+    type = ''
+    help_text = ''
+
+    def __init__(self):
+        return super(UamBaseException, self).__init__(self.help_text)
+
+
+class UamUnknownError(UamBaseException):
+    code = 'unknown_error'
+    type = ErrorTypes.UNKNOWN_ERROR
+    help_text = 'something wrong unknown happend, error detail is: {}'
+
+    def __init__(self, exc):
+        self.help_text = self.help_text.format(exc)
+        return super(UamUnknownError, self).__init__()
 
 
 class RequireDebugTrue(logging.Filter):

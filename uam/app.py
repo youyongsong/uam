@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 
 from peewee import (Model, ForeignKeyField, CharField,
@@ -8,17 +7,8 @@ from uam.settings import db
 
 
 APP_SOURCE_TYPES = (
-    ('file', 'File'),
-    ('url', 'URL'),
-    ('gh', 'Github'),
-    ('bt', 'Bitbucket'),
-    ('registry', 'Registry')
-)
-
-APP_STATUS = (
-    ('active', 'Active'),
-    ('inactive', 'Inactive'),
-    ('semi-active', 'Semi Active')
+    ('local', 'local'),
+    ('taps', 'taps')
 )
 
 
@@ -36,22 +26,22 @@ class Taps(Model):
     address = CharField(max_length=2048, unique=True)
     priority = IntegerField(default=0)
 
+    class Meta:
+        database = db
+
 
 class App(Model):
+    name = CharField(max_length=64, unique=True)
     source_type = CharField(max_length=32, choices=APP_SOURCE_TYPES)
-    source = TextField()
+    taps_alias = CharField(max_length=128)
     version = CharField(max_length=128)
     description = TextField(default='')
     image = TextField()
     environments = JSONField(default='{}')
-    status = CharField(max_length=24, default='active')
     shell = CharField(max_length=128, default='sh')
 
     class Meta:
         database = db
-        indexes = (
-            (('source_type', 'source'), True),
-        )
 
 
 class EntryPoint(Model):
