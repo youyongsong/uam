@@ -1,6 +1,6 @@
 import sys
 
-from uam.cli import uam
+from uam.interfaces.cli import uam
 
 
 sys.exit(uam())

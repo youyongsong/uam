@@ -9,6 +9,10 @@ class AppUninstallError(UamBaseException):
     type = ErrorTypes.USER_ERROR
 
 
+class AppExecError(UamBaseException):
+    type = ErrorTypes.USER_ERROR
+
+
 class AppEntityError(AppInstallError):
 
     def __init__(self, error):
@@ -59,3 +63,12 @@ class UninstallAppNotFound(AppUninstallError):
     def __init__(self, app_name):
         self.help_text = self.help_text.format(app_name)
         return super(UninstallAppNotFound, self).__init__()
+
+
+class ExecAppNotFound(AppUninstallError):
+    code = 'exec_app_not_found'
+    help_text = 'app {} dose not exist.'
+
+    def __init__(self, app_name):
+        self.help_text = self.help_text.format(app_name)
+        return super(ExecAppNotFound, self).__init__()

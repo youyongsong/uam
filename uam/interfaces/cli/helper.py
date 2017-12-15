@@ -18,6 +18,7 @@ class ClickHelper:
                 except tuple(exceptions) as exc:
                     ClickHelper.echo_errors(exc)
                 except Exception as exc:
+                    raise
                     ClickHelper.echo_errors(UamUnknownError(exc))
             return wrapper
         return exception_decorator
