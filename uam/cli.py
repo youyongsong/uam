@@ -23,46 +23,6 @@ def init():
     click.echo("Successfully initialized uam.")
 
 
-# @click.command()
-# @click.argument("app_name")
-# def install(app_name):
-#     click.echo("Installing app {}".format(app_name))
-#     try:
-#         app = install_app(app_name)
-#     except EntryPointConflict as exc:
-#         val = click.prompt("Commands {} already exist. "
-#                            "Type 'y' to override them, 'n' to ignore them"
-#                            .format(' '.join(exc.conflicted_entrypoints)))
-#         if val == 'y':
-#             try:
-#                 app = install_app(app_name, override_entrypoints=True)
-#             except AppAlreadyExist:
-#                 click.echo("{} already existed.".format(app_name))
-#                 return
-#         else:
-#             return
-#     except AppAlreadyExist:
-#         click.echo("{} already existed.".format(app_name))
-#         return
-#     click.echo("Successfully installed {}".format(app_name))
-# 
-#     entrys = [entry.alias for entry in app.entrypoints]
-#     click.echo("The following commands are available now: \n{}".format(
-#         '\n'.join(['- {}'.format(entry) for entry in entrys])))
-
-
-@click.command()
-@click.argument("app_name")
-def uninstall(app_name):
-    click.echo("Uninstalling app {}".format(app_name))
-    try:
-        uninstall_app(app_name)
-    except AppNotFound:
-        click.echo("App {} not found.".format(app_name))
-        return
-    click.echo("Successfully uninstalled {}.".format(app_name))
-
-
 @click.command()
 @click.argument("app_name")
 def info(app_name):
@@ -99,8 +59,6 @@ def shell(app_name, **kwargs):
 uam.add_command(taps)
 uam.add_command(app)
 uam.add_command(init)
-# uam.add_command(install)
-uam.add_command(uninstall)
 uam.add_command(info)
 uam.add_command(list_alias)
 uam.add_command(shell)

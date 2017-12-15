@@ -1,9 +1,10 @@
 import click
 from uam.click_helper import ClickHelper as helper
 
-from uam.usecases.app import install_app
-from uam.usecases.exceptions import AppInstallError, EntryPointsConflicted
-from uam.adapters import TapsGateway, AppGateway
+from uam.usecases.app import install_app, uninstall_app
+from uam.usecases.exceptions import (AppInstallError, AppUninstallError,
+                                     EntryPointsConflicted)
+from uam.adapters import DatabaseGateway, DockerServiceGateway, SystemGateway
 
 
 @click.group()
@@ -16,7 +17,7 @@ def app():
 @helper.handle_exception(AppInstallError)
 def install(app_name):
     try:
-        app = install_app(AppGateway, TapsGateway, app_name)
+        app = install_app(DatabaseGateway, SystemGateway, app_name)
     except EntryPointsConflicted as exc:
         val = helper.prompt("Commands '{}' already exist. "
                             "Type 'y' to override them, 'n' to ignore them"
@@ -26,4 +27,14 @@ def install(app_name):
     helper.echo_success(f"{app['name']} installed.")
 
 
+@click.command()
+@click.argument("app_name")
+@helper.handle_exception(AppUninstallError)
+def uninstall(app_name):
+    uninstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
+                  app_name)
+    helper.echo_success(f"{app_name} uninstalled.")
+
+
 app.add_command(install)
+app.add_command(uninstall)

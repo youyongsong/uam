@@ -5,6 +5,10 @@ class AppInstallError(UamBaseException):
     type = ErrorTypes.USER_ERROR
 
 
+class AppUninstallError(UamBaseException):
+    type = ErrorTypes.USER_ERROR
+
+
 class AppEntityError(AppInstallError):
 
     def __init__(self, error):
@@ -46,3 +50,12 @@ class EntryPointsConflicted(AppInstallError):
         self.help_text = self.help_text.format(app_name,
                                                ' '.join(conflicted_aliases))
         return super(EntryPointsConflicted, self).__init__()
+
+
+class UninstallAppNotFound(AppUninstallError):
+    code = 'uninstall_app_not_found'
+    help_text = 'app {} does not exist.'
+
+    def __init__(self, app_name):
+        self.help_text = self.help_text.format(app_name)
+        return super(UninstallAppNotFound, self).__init__()
