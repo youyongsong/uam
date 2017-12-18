@@ -20,6 +20,26 @@ class SystemGateway:
         return os.path.isdir(path)
 
     @staticmethod
+    def assure_folder(path):
+        if not os.path.exists(path):
+            logger.info(f"creating folder {path}...")
+            os.makedirs(path)
+
+    @staticmethod
+    def clone_repo(target_path, target_name, git_addr):
+        curdir = os.path.abspath(os.curdir)
+        try:
+            os.chdir(target_path)
+            if os.path.exists(os.path.join(target_path, target_name)):
+                logger.info(f"{target_path}/{target_name} already existed, no need to clone.")
+                return
+            logger.info(f"cloning repo {git_addr}")
+            command = f"git clone --depth 1 {git_addr} {target_name}"
+            subprocess.run(command, shell=True, check=True)
+        finally:
+            os.chdir(curdir)
+
+    @staticmethod
     def store_app_shims(shims):
         for name, content in shims.items():
             target_path = os.path.join(BIN_PATH, name)
