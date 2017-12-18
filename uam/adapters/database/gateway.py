@@ -34,7 +34,7 @@ class DatabaseGateway:
         try:
             app = App.get(App.name == name)
         except App.DoesNotExist:
-            raise AppNotFound(name)
+            raise AppNotExist(name)
         return app.id
 
     @staticmethod
@@ -42,7 +42,7 @@ class DatabaseGateway:
         try:
             app = App.get(App.name == name)
         except App.DoesNotExist:
-            raise AppNotFound(name)
+            raise AppNotExist(name)
         app_data = {
             'name': name,
             'source_type': app.source_type,
