@@ -7,12 +7,17 @@ import subprocess
 import sys
 
 from uam.settings import BIN_PATH, TEMP_PATH
+from uam.adapters.system.exceptions import YamlFileNotExist
 
 
 logger = logging.getLogger(__name__)
 
 
 class SystemGateway:
+
+    @staticmethod
+    def isfolder(path):
+        return os.path.isdir(path)
 
     @staticmethod
     def store_app_shims(shims):
@@ -49,3 +54,25 @@ class SystemGateway:
         finally:
             logger.debug(f'deleting temporay script {target_path}')
             os.remove(target_path)
+
+    @staticmethod
+    def list_yaml_names(folder):
+        return [
+            os.path.splitext(f)[0]
+            for f in os.listdir(folder)
+            if os.path.splitext(f)[1] in (".yaml", ".yml")
+        ]
+
+    @staticmethod
+    def read_yaml_content(path):
+        for ext in ("", ".yaml", ".yml"):
+            new_path = path + ext
+            if os.path.isfile(new_path):
+                path = new_path
+                break
+        else:
+            raise YamlFileNotExist(path)
+        
+        with open(path, "r") as f_handler:
+            content = f_handler.read()
+        return content

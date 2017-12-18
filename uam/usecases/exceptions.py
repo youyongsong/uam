@@ -13,13 +13,13 @@ class AppExecError(UamBaseException):
     type = ErrorTypes.USER_ERROR
 
 
-class AppEntityError(AppInstallError):
+class AppEntityInstallError(AppInstallError):
 
     def __init__(self, error):
         self.code = error.code
         self.help_text = error.help_text
         self.type = error.type
-        return super(AppEntityError, self).__init__()
+        return super(AppEntityInstallError, self).__init__()
 
 
 class AppExisted(AppInstallError):

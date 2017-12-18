@@ -31,6 +31,7 @@ TEMP_PATH = os.path.join(UAM_PATH, '.temp')
 if not os.path.exists(TEMP_PATH):
     os.makedirs(TEMP_PATH)
 
+
 docker_client = docker.from_env()
 
 
@@ -61,6 +62,11 @@ class ErrorTypes:
     USER_ERROR = "user_error"
     SYSTEM_ERROR = "system_error"
     UNKNOWN_ERROR = "unknown_error"
+
+
+class SourceTypes:
+    LOCAL = 'local'
+    TAPS = 'taps'
 
 
 class UamBaseException(Exception):

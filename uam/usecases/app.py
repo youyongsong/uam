@@ -1,13 +1,15 @@
 import logging
-import os
 
+from uam.settings import SourceTypes
 from uam.usecases.taps import list_taps
 from uam.usecases.exceptions import (AppExisted, FormulaNotFound,
-                                     EntryPointsConflicted, AppEntityError,
+                                     EntryPointsConflicted, AppEntityInstallError,
                                      UninstallAppNotFound, ExecAppNotFound)
 from uam.entities.app import (recognize_app_name, create_app,
-                              deactive_entrypoints, generate_app_shims)
-from uam.entities.exceptions import RecognizeAppError, AppCreateError
+                              deactive_entrypoints, generate_app_shims,
+                              select_proper_version, build_formula_path)
+from uam.entities.exceptions import (RecognizeAppError, AppCreateError,
+                                     VersionSelectError)
 
 
 logger = logging.getLogger(__name__)
@@ -19,26 +21,34 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
         source_type, app_name, formula_lst = recognize_app_name(
             app_name, list_taps(DatabaseGateway))
     except RecognizeAppError as error:
-        raise AppEntityError(error)
+        raise AppEntityInstallError(error)
 
     if DatabaseGateway.app_exists(app_name):
         raise AppExisted(app_name)
 
-    for formula in formula_lst:
-        taps_name, formula_path = formula['taps_name'], formula['path']
-        if not os.path.isfile(formula_path):
-            continue
-        logger.info(f'installing {app_name} from taps {taps_name}')
-        with open(formula_path, 'r') as f_handler:
-            formula_content = f_handler.read()
-            break
+    if source_type == SourceTypes.LOCAL:
+        formula_content = SystemGateway.read_yaml_content(formula_lst[0]['path'])
     else:
-        raise FormulaNotFound(app_name)
+        for formula in formula_lst:
+            if SystemGateway.isfolder(formula['path']):
+                taps_name, formula_folder = formula['taps_name'], formula['path']
+                break
+        else:
+            raise FormulaNotFound(app_name)
+        logger.info(f"{app_name}'s formula found in taps {taps_name}.")
+        versions = SystemGateway.list_yaml_names(formula_folder)
+        try:
+            version = select_proper_version(versions)
+        except VersionSelectError as error:
+            raise AppEntityInstallError(error)
+        logger.info(f"version {version} will be installed.")
+        formula_path = build_formula_path(taps_name, app_name, version)
+        formula_content = SystemGateway.read_yaml_content(formula_path)
 
     try:
-        app = create_app(source_type, taps_name, app_name, formula_content)
+        app = create_app(source_type, taps_name, app_name, version, formula_content)
     except AppCreateError as error:
-        raise AppEntityError(error)
+        raise AppEntityInstallError(error)
     if override_entrypoints is None:
         conflicted_aliases = DatabaseGateway.get_conflicted_entrypoints(
             app['entrypoints'])
@@ -78,4 +88,4 @@ def exec_app(DatabaseGateway, SystemGateway, app_name, arguments=''):
     except DatabaseGateway.AppNotExist:
         raise ExecAppNotFound(app_name)
     shim = generate_shell_shim(app)
-    SystemGateway.run_temporay_script(shim, arguments='')
+    SystemGateway.run_temporay_script(shim, arguments=arguments)
