@@ -13,6 +13,10 @@ class DatabaseGateway:
     AppNotExist = AppNotExist
 
     @staticmethod
+    def assure_tables():
+        db.create_tables([Taps, App, EntryPoint, Volume, Config], safe=True)
+
+    @staticmethod
     def list_taps():
         return [
             {

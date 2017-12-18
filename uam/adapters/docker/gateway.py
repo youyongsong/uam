@@ -11,6 +11,15 @@ logger = logging.getLogger(__name__)
 class DockerServiceGateway:
 
     @staticmethod
+    def assure_network(network_name, labels={}):
+        try:
+            docker_client.networks.get(network_name)
+        except docker.errors.NotFound:
+            logger.info(f'creating docker network {network_name} ...')
+            docker_client.networks.create(network_name, driver="bridge",
+                                          labels=labels)
+
+    @staticmethod
     def delete_volume(vol_name):
         logger.info(f'removing docker volume {vol_name}')
         try:
