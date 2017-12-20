@@ -3,7 +3,8 @@ import logging
 from uam.settings import db
 
 from .models import Taps, App, EntryPoint, Volume, Config
-from .exceptions import AppNotExist
+from .exceptions import (AppNotExist, TapsAliasConflict,
+                         TapsAddressConflict)
 
 
 logger = logging.getLogger(__name__)
@@ -11,10 +12,21 @@ logger = logging.getLogger(__name__)
 
 class DatabaseGateway:
     AppNotExist = AppNotExist
+    TapsAliasConflict = TapsAliasConflict
+    TapsAddressConflict = TapsAddressConflict
 
     @staticmethod
     def assure_tables():
         db.create_tables([Taps, App, EntryPoint, Volume, Config], safe=True)
+
+    @staticmethod
+    def store_taps(taps):
+        Taps.create(**taps)
+
+    @staticmethod
+    def delete_taps(alias):
+        taps = Taps.get(Taps.alias == alias)
+        taps.delete_instance()
 
     @staticmethod
     def list_taps():
@@ -26,6 +38,24 @@ class DatabaseGateway:
             }
             for t in Taps.select()
         ]
+
+    @staticmethod
+    def valid_taps_conflict(alias, address):
+        if Taps.select().where(Taps.alias == alias):
+            error = TapsAliasConflict(alias)
+            logger.warning(error.message)
+            raise error
+        if Taps.select().where(Taps.address == address):
+            error = TapsAddressConflict(address)
+            logger.warning(error.message)
+            raise error
+        return True
+
+    @staticmethod
+    def taps_exists(alias):
+        if Taps.select().where(Taps.alias == alias):
+            return True
+        return False
 
     @staticmethod
     def app_exists(name):

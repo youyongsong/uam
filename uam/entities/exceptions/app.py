@@ -5,14 +5,6 @@ class RecognizeAppError(UamBaseException):
     type = ErrorTypes.USER_ERROR
 
 
-class AppCreateError(UamBaseException):
-    type = ErrorTypes.USER_ERROR
-
-
-class VersionSelectError(UamBaseException):
-    type = ErrorTypes.USER_ERROR
-
-
 class TapsNotFound(RecognizeAppError):
     code = 'taps_not_found'
     type = ErrorTypes.USER_ERROR
@@ -34,6 +26,10 @@ class AppNameInvalid(RecognizeAppError):
         return super(AppNameInvalid, self).__init__()
 
 
+class AppCreateError(UamBaseException):
+    type = ErrorTypes.USER_ERROR
+
+
 class FormulaMalformed(AppCreateError):
     code = 'app_formula_malformed'
     type = ErrorTypes.USER_ERROR
@@ -42,6 +38,10 @@ class FormulaMalformed(AppCreateError):
     def __init__(self, err):
         self.help_text = self.help_text.format(err)
         return super(FormulaMalformed, self).__init__()
+
+
+class VersionSelectError(UamBaseException):
+    type = ErrorTypes.USER_ERROR
 
 
 class NoValidVersion(VersionSelectError):

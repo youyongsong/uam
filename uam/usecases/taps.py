@@ -1,136 +1,76 @@
 import logging
-
-from uam.settings import BUILTIN_TAPS, TAPS_PATH
-
-import re
 import os
-import subprocess
-import shutil
-from uam.adapters.database.models import Taps
-from .taps_exceptions import *
+
+from uam.settings import TAPS_PATH
+from uam.usecases.exceptions import TapsAddConflict
+from uam.entities.taps import (validiate_new_taps, complete_shorten_address,
+                               get_address_by_alias, build_sorted_taps,
+                               is_taps_builtin)
+from uam.entities.exceptions import taps as taps_excs
 
 
 logger = logging.getLogger(__name__)
 
 
-def add_taps(alias, address, priority=0):
-    err_msg = ''
-    if alias in [t['alias'] for t in BUILTIN_TAPS]:
-        err_msg = (f'{alias} in used by builtin taps, please try another '
-                   'alias name.')
-    elif address in [t['address'] for t in BUILTIN_TAPS]:
-        err_msg = f'{address} is builtin taps, you do not need to add it.'
-    elif Taps.select().where(Taps.alias == alias):
-        err_msg = f'{alias} is already used, please try another alias name.'
-    elif Taps.select().where(Taps.address == address):
-        err_msg = (f'{address} is already added before, you can not add '
-                   'it again.')
-    if err_msg:
-        logger.warning(err_msg)
-        # raise TapsInvalid(err_msg)
-        raise TapsAddError()
-
-    abs_address = get_abs_address(address)
-    curdir = os.path.abspath(os.curdir)
-    os.chdir(TAPS_PATH)
+def add_taps(SystemGateway, DatabaseGateway, alias, address, priority=0):
+    logger.info("checking if taps already existed ...")
     try:
-        logger.info(f'cloning taps {abs_address} ...')
-        command = f'git clone --depth 1 {abs_address} {alias}'
-        logger.debug(command)
-        subprocess.run(command, shell=True, check=True)
-    except Exception as exc:
-        err_msg = f'{abs_address} clone failed: {exc}'
-        logger.error(err_msg)
-        # raise TapsAddError(err_msg, code='git_clone_error')
-        raise TapsAddError()
-    finally:
-        os.chdir(curdir)
+        validiate_new_taps(alias, address)
+    except taps_excs.AliasConflict as error:
+        logger.error(error.message)
+        raise TapsAddConflict(error.alias)
+    except taps_excs.AddressConflict as error:
+        logger.error(error.message)
+        raise TapsAddConflict(error.address)
 
     try:
-        logger.info('storing taps data into local db ...')
-        Taps.create(**{'alias': alias, 'address': address,
-                       'priority': priority})
-    except Exception as exc:
-        err_msg = f'failed to store taps data, reason: {exc}'
-        logger.error(err_msg)
-        # raise TapsAddError(err_msg, code='save_database_error')
-        raise TapsAddError()
+        DatabaseGateway.valid_taps_conflict(alias, address)
+    except DatabaseGateway.TapsAliasConflict as error:
+        raise TapsAddConflict(error.alias)
+    except DatabaseGateway.TapsAddressConflict as error:
+        raise TapsAddConflict(error.address)
+
+    address = complete_shorten_address(address)
+    logger.info(f"cloning repo {address} ...")
+    SystemGateway.clone_repo(TAPS_PATH, alias, address)
+    logger.info(f"storing taps data into database ...")
+    DatabaseGateway.store_taps({
+        "alias": alias, "address": address, "priority": priority
+    })
 
 
-def remove_taps(alias):
-    err_msg = ''
-    if alias in [t['alias'] for t in BUILTIN_TAPS]:
-        err_msg = f'{alias} is builtin taps, can not be deleted.'
-    elif not Taps.select().where(Taps.alias == alias):
-        err_msg = f'{alias} does not exist.'
-    if err_msg:
-        logger.warning(err_msg)
-        # raise TapsRemoveInvalid(err_msg)
-        raise TapsRemoveError()
+def remove_taps(SystemGateway, DatabaseGateway, alias):
+    logging.info("checking if taps exists ...")
+    if is_taps_builtin(alias):
+        error = taps_excs.TapsRemoveBuiltin(alias) 
+        logger.error(error.help_text)
+        raise error
+    if not DatabaseGateway.taps_exists(alias):
+        error = taps_excs.TapsRemoveNotFound(alias)
+        logger.error(error.help_text)
+        raise error
 
     target_path = os.path.join(TAPS_PATH, alias)
-    try:
-        shutil.rmtree(target_path)
-    except Exception as exc:
-        err_msg = f'failed to delete {target_path}, reason: {exc}'
-        logger.error(err_msg)
-        # raise TapsRemoveError(err_msg, code='delete_repo_error')
-        raise TapsRemoveError()
+    logger.info(f"remoing repo from {target_path} ...")
+    SystemGateway.remove_repo(target_path)
 
-    try:
-        taps = Taps.get(Taps.alias == alias)
-        taps.delete_instance()
-    except Exception as exc:
-        err_msg = f'faield to delete insatance in database.'
-        # raise TapsRemoveError(err_msg, code='delete_instance_error')
-        raise TapsRemoveError()
+    logger.info(f"deleting taps from database ...")
+    DatabaseGateway.delete_taps(alias)
 
 
 def list_taps(DatabaseGateway):
-    builtin_taps = BUILTIN_TAPS
+    logger.info("querying all taps from database ...")
     external_taps = DatabaseGateway.list_taps()
-    return sorted(builtin_taps+external_taps,
-                  key=lambda k: k['priority'], reverse=True)
+    return build_sorted_taps(external_taps)
 
 
-def update_taps(alias=None):
-    all_taps = list_taps()
-
+def update_taps(SystemGateway, DatabaseGateway, alias=None):
     if not alias:
         for t in all_taps:
-            errors = []
-            try:
-                update_taps(alias=t['alias'])
-            except (TapsUpdateInvalid, TapsUpdateError) as exc:
-                errors.append(exc)
-        if errors:
-            # raise MultiTapsUpdateError(errors)
-            raise TapsUpdateError()
-        return
+            update_taps(alias=t['alias'])
 
-    if alias not in [t['alias'] for t in all_taps]:
-        err_msg = f'{alias} taps does not exist.'
-        logger.warning(err_msg)
-        # raise TapsUpdateInvalid(err_msg)
-        raise TapsUpdateErrorn()
-
-    logger.info(f'updating taps {alias} ...')
-    address = [t['address'] for t in all_taps if t['alias'] == alias][0]
-    abs_address = get_abs_address(address)
-    cur_dir = os.path.abspath(os.curdir)
-    alias_path = os.path.join(TAPS_PATH, alias)
-    os.chdir(alias_path)
-    try:
-        subprocess.run(f'git pull {abs_address}', shell=True, check=True)
-    except Exception as exc:
-        err_msg = f'git pull {abs_address} failed, reason: {exc}'
-        logger.error(err_msg)
-        # raise TapsUpdateError(err_msg, code='pull_repo_error')
-        raise TapsUpdateError
-
-
-def get_abs_address(address):
-    short_pattern = re.compile(r"^[\w\-_\.]+/[\w\-_\.]+$")
-    if short_pattern.match(address):
-        return f'git@github.com:{address}.git'
-    return address
+    address = get_address_by_alias(alias, list_taps(DatabaseGateway))
+    git_addr = complete_shorten_address(address)
+    repo_path = os.path.join(TAPS_PATH, alias)
+    logger.info(f'updating repo {alias} from {git_addr} ...')
+    SystemGateway.update_repo(repo_path, git_addr)

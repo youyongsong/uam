@@ -3,7 +3,7 @@ import logging
 
 from uam.settings import (BUILTIN_TAPS, UAM_PATH, TAPS_PATH,
                           GLOBAL_NETWORK_NAME, CONTAINER_META_LABELS)
-from uam.entities.system import complete_shorten_address
+from uam.entities.taps import complete_shorten_address
 
 
 logger = logging.getLogger(__name__)

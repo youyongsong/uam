@@ -1,10 +1,10 @@
 import logging
-
 import os
 import stat
 import uuid
 import subprocess
 import sys
+import shutil
 
 from uam.settings import BIN_PATH, TEMP_PATH
 from uam.adapters.system.exceptions import YamlFileNotExist
@@ -35,6 +35,20 @@ class SystemGateway:
                 return
             logger.info(f"cloning repo {git_addr}")
             command = f"git clone --depth 1 {git_addr} {target_name}"
+            subprocess.run(command, shell=True, check=True)
+        finally:
+            os.chdir(curdir)
+
+    @staticmethod
+    def remove_repo(repo_path):
+        shutil.rmtree(repo_path)
+
+    @staticmethod
+    def update_repo(repo_path, git_addr):
+        curdir = os.path.abspath(os.curdir)
+        try:
+            os.chdir(repo_path)
+            command = f"git pull {git_addr}"
             subprocess.run(command, shell=True, check=True)
         finally:
             os.chdir(curdir)
