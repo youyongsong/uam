@@ -1,10 +1,10 @@
 import click
 from tabulate import tabulate
 
+from uam.adapters.system.gateway import SystemGateway
 from uam.adapters.database.gateway import DatabaseGateway
 from uam.usecases import taps as taps_usecases
-from uam.usecases.taps_exceptions import (TapsAddError, TapsRemoveError,
-                                          TapsListError, TapsUpdateError)
+from uam.usecases.exceptions import taps as taps_excs
 
 from .helper import ClickHelper as helper
 
@@ -18,23 +18,26 @@ def taps():
 @click.argument("alias")
 @click.argument("address")
 @click.option("--priority", default=0)
-@helper.handle_exception(TapsAddError)
+@helper.handle_exception(taps_excs.TapsAddError)
 def add(alias, address, priority):
-    taps_usecases.add_taps(alias, address, priority=priority)
+    click.echo(f"adding taps {alias} using address {address} ...")
+    taps_usecases.add_taps(SystemGateway, DatabaseGateway,
+                           alias, address, priority=priority)
     helper.echo_success(f"{alias} added!")
 
 
 @click.command()
 @click.argument("alias")
-@helper.handle_exception(TapsRemoveError)
+@helper.handle_exception(taps_excs.TapsRemoveError)
 def rm(alias):
-    taps_usecases.remove_taps(alias)
+    click.echo(f"removing taps {alias} ...")
+    taps_usecases.remove_taps(SystemGateway, DatabaseGateway, alias)
     helper.echo_success(f'{alias} removed!')
 
 
 @click.command()
-@helper.handle_exception(TapsListError)
 def ls():
+    click.echo(f"listing all added taps ...")
     click.echo(
         display_taps_list(
             taps_usecases.list_taps(DatabaseGateway)))
@@ -42,9 +45,9 @@ def ls():
 
 @click.command()
 @click.argument("alias", default='')
-@helper.handle_exception(TapsUpdateError)
 def update(alias):
-    taps_usecases.update_taps(alias)
+    click.echo(f"updateing taps {alias} ...")
+    taps_usecases.update_taps(SystemGateway, DatabaseGateway, alias)
     helper.echo_success('all taps updated!')
 
 

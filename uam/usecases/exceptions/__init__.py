@@ -1,4 +1,5 @@
 from uam.settings import UamBaseException, ErrorTypes
+from uam.usecases.exceptions.taps import *
 
 
 class AppInstallError(UamBaseException):
