@@ -107,6 +107,22 @@ def generate_app_shims(app):
     return shims
 
 
+def generate_shell_shim(app):
+    with open(os.path.join(os.path.dirname(__file__),
+                           'shim.tmpl'), 'r') as f_handler:
+        template = Template(f_handler.read())
+
+    return template.render({
+        "app": app,
+        "entrypoint": {"container_entrypoint": app["shell"]},
+        "volumes": app["volumes"],
+        "configs": app["configs"],
+        "python_path": sys.executable,
+        "meta_labels": CONTAINER_META_LABELS,
+        "network": GLOBAL_NETWORK_NAME,
+    })
+
+
 def deactive_entrypoints(entrypoints, aliases):
     return [
         {**e, **{'enabled': False}}

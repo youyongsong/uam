@@ -99,9 +99,10 @@ class DatabaseGateway:
                 'alias': e.alias,
                 'container_entrypoint': e.container_entrypoint,
                 'container_arguments': e.container_arguments,
-                'enabled': e.container_enabled
+                'enabled': e.enabled
             } for e in app.entrypoints
         ]
+        return app_data
 
     @staticmethod
     def store_app(app):

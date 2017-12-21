@@ -1,6 +1,7 @@
 import click
 
 from uam.usecases import app as app_usecases
+from uam.usecases.exceptions import app as app_excs
 from uam.usecases.exceptions import (AppInstallError, AppUninstallError,
                                      EntryPointsConflicted)
 from uam.adapters.database.gateway import DatabaseGateway
@@ -42,10 +43,9 @@ def uninstall(app_name):
 
 @click.command("shell")
 @click.argument("app_name")
-@helper.handle_exception(AppUninstallError)
+@helper.handle_errors(user_errors=[app_excs.AppExecNotFound])
 def exec_app(app_name):
-    pass
-    # TODO
+    app_usecases.exec_app(DatabaseGateway, SystemGateway, app_name)
 
 
 app.add_command(install)
