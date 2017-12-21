@@ -4,12 +4,14 @@ from uam.settings import SourceTypes
 from uam.usecases.taps import list_taps
 from uam.usecases.exceptions import (AppExisted, FormulaNotFound,
                                      EntryPointsConflicted, AppEntityInstallError,
-                                     UninstallAppNotFound, ExecAppNotFound)
+                                     UninstallAppNotFound, AppExecNotFound)
 from uam.entities.app import (recognize_app_name, create_app,
                               deactive_entrypoints, generate_app_shims,
-                              select_proper_version, build_formula_path)
+                              generate_shell_shim, select_proper_version,
+                              build_formula_path)
 from uam.entities.exceptions import (RecognizeAppError, AppCreateError,
                                      VersionSelectError)
+from uam.entities.exceptions import app as app_excs
 
 
 logger = logging.getLogger(__name__)
@@ -86,6 +88,8 @@ def exec_app(DatabaseGateway, SystemGateway, app_name, arguments=''):
     try:
         app = DatabaseGateway.get_app_detail(app_name)
     except DatabaseGateway.AppNotExist:
-        raise ExecAppNotFound(app_name)
+        error = AppExecNotFound(app_name) 
+        logger.error(error.help_text)
+        raise error
     shim = generate_shell_shim(app)
     SystemGateway.run_temporay_script(shim, arguments=arguments)

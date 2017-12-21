@@ -77,16 +77,16 @@ class SystemGateway:
                 logger.info('{} removed.'.format(target_path))
 
     @staticmethod
-    def run_temporay_script(shim, commands=''):
+    def run_temporay_script(shim, arguments=''):
         target_path = os.path.join(TEMP_PATH, f'uam-shell-{uuid.uuid4()}')
-        logger.debug(f'creating temporay script {target_path}')
+        logger.info(f'creating temporay script {target_path}')
         with open(target_path, 'w') as f_handler:
             f_handler.write(shim)
         try:
-            subprocess.run(f'{sys.executable} {target_path} {commands}',
+            subprocess.run(f'{sys.executable} {target_path} {arguments}',
                            shell=True)
         finally:
-            logger.debug(f'deleting temporay script {target_path}')
+            logger.info(f'deleting temporay script {target_path}')
             os.remove(target_path)
 
     @staticmethod

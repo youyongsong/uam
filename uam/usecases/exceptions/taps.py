@@ -4,7 +4,6 @@ class TapsAddError(UamBaseException):
     pass
 
 class TapsAddConflict(TapsAddError):
-    type = ErrorTypes.USER_ERROR
     help_text = "{} is conflicted with existed taps."
 
     def __init__(self, taps):
@@ -32,7 +31,7 @@ class TapsRemoveNotFond(UamBaseException):
     def __init__(self, alias):
         self.alias = alias
         self.help_text = self.help_text.format(alias)
-        return super()
+        return super(TapsRemoveNotFond, self).__init__()
 
 
 class TapsUpdateError(UamBaseException):
