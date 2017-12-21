@@ -58,10 +58,20 @@ class DatabaseGateway:
         return False
 
     @staticmethod
-    def app_exists(name):
-        if App.select().where(App.name == name):
-            return True
-        return False
+    def app_exists(name, pinned_version=None):
+        if pinned_version:
+            if App.select().where(
+                (App.name == name) & (App.pinned == True) &
+                (App.pinned_version == pinned_version)
+            ):
+                return True
+            return False
+        else:
+            if App.select().where(
+                (App.name == name) & (App.pinned == False)
+            ):
+                return True
+            return False
 
     @staticmethod
     def get_app_id(name):
