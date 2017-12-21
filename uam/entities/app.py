@@ -10,8 +10,9 @@ from semantic_version import Version
 from uam.settings import (TAPS_PATH, FORMULA_FOLDER_NAME,
                           CONTAINER_META_LABELS, GLOBAL_NETWORK_NAME,
                           SourceTypes)
-from uam.entities.exceptions import (TapsNotFound, AppNameInvalid,
-                                     FormulaMalformed, NoValidVersion)
+from uam.entities.exceptions.app import (TapsNotFound, AppNameInvalid,
+                                         FormulaMalformed, NoValidVersion,
+                                         PinnedVersionNotExist)
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,8 @@ def recognize_app_name(app_name, taps):
         if len(lst) == 2:
             taps_name, app_name = lst
             if taps_name not in [t['alias'] for t in taps]:
-                raise TapsNotFound(taps_name)
+                logger.error(f"can not recognize {app_name}'s taps.")
+                raise TapsNotFound()
             formula_lst = [{
                 'taps_name': taps_name,
                 'path': os.path.join(TAPS_PATH, taps_name, FORMULA_FOLDER_NAME,
@@ -46,15 +48,18 @@ def recognize_app_name(app_name, taps):
                 for t in taps
             ]
         else:
-            raise AppNameInvalid(app_name)
+            logger.error(f"can not recognize {app_name}'s format.")
+            raise AppNameInvalid()
     return (source_type, app_name, formula_lst)
 
 
-def create_app(source_type, taps_name, app_name, version, formula: str):
+def create_app(source_type, taps_name, app_name, version, formula: str,
+               pinned_version=None):
     try:
         data = yaml.load(formula)
     except yaml.error.YAMLError as exc:
-        raise FormulaMalformed(exc)
+        logger.error(f"formual content does not match yaml format: {exc}")
+        raise FormulaMalformed()
 
     # TODO formula schema check
 
@@ -68,7 +73,9 @@ def create_app(source_type, taps_name, app_name, version, formula: str):
         'shell': data.get('shell', 'sh'),
         'status': 'active',
         'environments': data.get('environments', {}),
-        'configs': data.get('configs', [])
+        'configs': data.get('configs', []),
+        "pinned": False,
+        "pinned_version": ""
     }
     app['volumes'] = [
         {'name': f'uam-{uuid.uuid4()}', 'path': v['path']}
@@ -83,6 +90,9 @@ def create_app(source_type, taps_name, app_name, version, formula: str):
         }
         for k, v in data['entrypoints'].items()
     ]
+    if pinned_version:
+        app["pinned"] = True
+        app["pinned_version"] = pinned_version
 
     return app
 
@@ -131,15 +141,30 @@ def deactive_entrypoints(entrypoints, aliases):
     ]
 
 
-def select_proper_version(versions):
+def select_proper_version(versions, pinned_version=None):
+    # format versions
     versions_lst = []
     for v in versions:
         try:
             versions_lst.append([Version(v, partial=True), v])
         except ValueError:
-            logger.warning(f"{v} is not a valid semantic version.")
+            logger.warning(f"{v} is not a valid semantic version, "
+                            "ignoring it ...")
     if not versions_lst:
+        logger.error("all versions are not valid semantic version format.")
         raise NoValidVersion()
+
+    # select the pinned version
+    if pinned_version:
+        pinned = Version(pinned_version, partial=True)
+        for v in versions_lst:
+            if pinned == v[0]:
+                return v[1]
+        else:
+            logger.error(f"{pinned_version} is not in avaiable versions list.")
+            raise PinnedVersionNotExist()
+
+    # select the latest version
     latest = sorted(versions_lst, key=lambda v: v[0], reverse=True)[0]
     return latest[1]
 

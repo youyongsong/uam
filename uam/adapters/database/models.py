@@ -31,7 +31,7 @@ class Taps(Model):
 
 
 class App(Model):
-    name = CharField(max_length=64, unique=True)
+    name = CharField(max_length=64)
     source_type = CharField(max_length=32, choices=APP_SOURCE_TYPES)
     taps_alias = CharField(max_length=128)
     version = CharField(max_length=128)
@@ -39,9 +39,14 @@ class App(Model):
     image = TextField()
     environments = JSONField(default='{}')
     shell = CharField(max_length=128, default='sh')
+    pinned = BooleanField(default=False)
+    pinned_version = CharField(max_length=128)
 
     class Meta:
         database = db
+        indexes = (
+            (("name", "version", "pinned"), True),
+        )
 
 
 class EntryPoint(Model):
