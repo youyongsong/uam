@@ -17,12 +17,13 @@ DESCRIPTION = 'uam is universal application manager.'
 URL = 'https://github.com/youyongsong/uam'
 EMAIL = 'youyongsong@gmail.com'
 AUTHOR = 'YongSong You'
-
+ 
 # What packages are required for this module to be executed?
 REQUIRED = [
     'click==6.7', 'pyyaml==3.12', 'jinja2==2.9.6', 'peewee==2.10.2',
     'docker==2.5.1', 'dockerpty==0.4.1', 'tabulate==0.8.2',
-    'colorlog==3.1.0', 'netifaces==0.10.6', 'semantic-version==2.6.0'
+    'colorlog==3.1.0', 'netifaces==0.10.6', 'semantic-version==2.6.0',
+    "crayons==0.1.2"
     # 'requests', 'maya', 'records',
 ]
 

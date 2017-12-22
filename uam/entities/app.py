@@ -18,6 +18,12 @@ from uam.entities.exceptions.app import (TapsNotFound, AppNameInvalid,
 logger = logging.getLogger(__name__)
 
 
+class AppStatus:
+    Active = "active"
+    Inactive = "inactive"
+    SemiActive = "semi-active"
+
+
 def recognize_app_name(app_name, taps):
     if app_name.startswith(('.', '/')):
         source_type = SourceTypes.LOCAL
@@ -172,3 +178,24 @@ def select_proper_version(versions, pinned_version=None):
 def build_formula_path(taps_name, app_name, version, ext="yaml"):
     return os.path.join(TAPS_PATH, taps_name, FORMULA_FOLDER_NAME,
                         app_name, version)
+
+
+def get_app_status(app_data):
+    entrypoints_enabled_status_lst = [e["enabled"] for e in app_data["entrypoints"]]
+    if all(entrypoints_enabled_status_lst):
+        app_status = AppStatus.Active
+    elif any(entrypoints_enabled_status_lst):
+        app_status = AppStatus.SemiActive
+    else:
+        app_status = AppStatus.Inactive
+    return app_status
+
+
+def build_app_list(apps):
+    app_lst = {}
+    for app in apps:
+        if app["name"] not in app_lst:
+            app_lst[app["name"]] = []
+        app_info = {**app, **{"status": get_app_status(app)}}
+        app_lst[app["name"]].append(app_info)
+    return app_lst
