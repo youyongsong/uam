@@ -85,7 +85,7 @@ of installed apps. the conflicted entrypoints are: {}\
         return super(AppEntryPointsConflicted, self).__init__()
 
 
-class AppExecError(Exception):
+class AppExecError(UamBaseException):
     pass
 
 
@@ -98,14 +98,17 @@ class AppExecNotFound(AppExecError):
         return super(AppExecNotFound, self).__init__()
 
 
-class AppUninstallError(Exception):
+class AppUninstallError(UamBaseException):
     pass
 
 
 class AppUninstallNotFound(AppUninstallError):
-    help_text = "you have not installed app {}, no need to uninstall it."
+    help_text = "you have not installed app {} yet, no need to uninstall it."
 
-    def __init__(self, app_name):
-        self.app_name = app_name
-        self.help_text = self.help_text.format(app_name)
+    def __init__(self, app_name, pinned_version=None):
+        if not pinned_version:
+            self.app_name = app_name
+        else:
+            self.app_name = f"{app_name}📌 {pinned_version}"
+        self.help_text = self.help_text.format(self.app_name)
         return super(AppUninstallNotFound, self).__init__()
