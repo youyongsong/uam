@@ -96,32 +96,13 @@ class DatabaseGateway:
             msg = f"app {name} not found in database: {error}"
             logger.error(msg)
             raise AppNotExist(msg)
-        app_data = {
-            'name': name,
-            'source_type': app.source_type,
-            'taps_alias': app.taps_alias,
-            'version': app.version,
-            'description': app.description,
-            'image': app.image,
-            'shell': app.shell,
-            'environments': app.environments,
-        }
-        app_data['volumes'] = [
-            {'name': v.name, 'path': v.path} for v in app.volumes
+        return _build_app_data(app)
+
+    @staticmethod
+    def list_apps():
+        return [
+            _build_app_data(app) for app in App.select()
         ]
-        app_data['configs'] = [
-            {'host_path': c.host_path, 'container_path': c.container_path}
-            for c in app.configs
-        ]
-        app_data['entrypoints'] = [
-            {
-                'alias': e.alias,
-                'container_entrypoint': e.container_entrypoint,
-                'container_arguments': e.container_arguments,
-                'enabled': e.enabled
-            } for e in app.entrypoints
-        ]
-        return app_data
 
     @staticmethod
     def store_app(app):
@@ -146,12 +127,12 @@ class DatabaseGateway:
 
     @staticmethod
     def get_conflicted_entrypoints(entrypoints):
-        return [
+        return list(set([
             e.alias for e in EntryPoint.select().where(
                 (EntryPoint.alias << [item['alias'] for item in entrypoints]) &
                 (EntryPoint.enabled == True)
             )
-        ]
+        ]))
 
     @staticmethod
     def get_active_entrypoints(app_id):
@@ -167,6 +148,10 @@ class DatabaseGateway:
         ]
 
     @staticmethod
+    def disable_entrypoints(aliases):
+        EntryPoint.update(enabled=False).where(EntryPoint.alias << aliases).execute()
+
+    @staticmethod
     def get_volumes(app_id):
         return [
             {
@@ -175,3 +160,33 @@ class DatabaseGateway:
             }
             for v in Volume.select().where(Volume.app == app_id)
         ]
+
+def _build_app_data(app):
+    app_data = {
+        'name': app.name,
+        'source_type': app.source_type,
+        'taps_alias': app.taps_alias,
+        'version': app.version,
+        'description': app.description,
+        'image': app.image,
+        'shell': app.shell,
+        'environments': app.environments,
+        'pinned': app.pinned,
+        'pinned_version': app.pinned_version
+    }
+    app_data['volumes'] = [
+        {'name': v.name, 'path': v.path} for v in app.volumes
+    ]
+    app_data['configs'] = [
+        {'host_path': c.host_path, 'container_path': c.container_path}
+        for c in app.configs
+    ]
+    app_data['entrypoints'] = [
+        {
+            'alias': e.alias,
+            'container_entrypoint': e.container_entrypoint,
+            'container_arguments': e.container_arguments,
+            'enabled': e.enabled
+        } for e in app.entrypoints
+    ]
+    return app_data

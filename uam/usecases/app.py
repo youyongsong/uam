@@ -10,7 +10,7 @@ from uam.usecases.exceptions.app import (AppNameFormatInvalid, AppTapsNotFound,
 from uam.entities.app import (recognize_app_name, create_app,
                               deactive_entrypoints, generate_app_shims,
                               generate_shell_shim, select_proper_version,
-                              build_formula_path)
+                              build_formula_path, build_app_list)
 from uam.entities.exceptions import app as app_excs
 
 
@@ -70,6 +70,9 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
     elif override_entrypoints is False:
         app['entrypoints'] = deactive_entrypoints(
             app['entrypoints'], conflicted_aliases)
+    else:
+        logger.info("disabling conflicted aliases ...")
+        DatabaseGateway.disable_entrypoints(conflicted_aliases)
 
     shims = generate_app_shims(app)
 
@@ -105,3 +108,9 @@ def exec_app(DatabaseGateway, SystemGateway, app_name, arguments=''):
         raise error
     shim = generate_shell_shim(app)
     SystemGateway.run_temporay_script(shim, arguments=arguments)
+
+
+def list_apps(DatabaseGateway):
+    apps = DatabaseGateway.list_apps()
+    app_lst = build_app_list(apps)
+    return app_lst
