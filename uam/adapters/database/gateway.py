@@ -42,13 +42,13 @@ class DatabaseGateway:
     @staticmethod
     def valid_taps_conflict(alias, address):
         if Taps.select().where(Taps.alias == alias):
-            error = TapsAliasConflict(alias)
-            logger.warning(error.message)
-            raise error
+            msg = f"taps named {alias} already existed."
+            logger.error(msg)
+            raise TapsAliasConflict(msg)
         if Taps.select().where(Taps.address == address):
-            error = TapsAddressConflict(address)
-            logger.warning(error.message)
-            raise error
+            msg = f"taps addressed {address} already existed."
+            logger.error(msg)
+            raise TapsAddressConflict(msg)
         return True
 
     @staticmethod
@@ -74,19 +74,28 @@ class DatabaseGateway:
             return False
 
     @staticmethod
-    def get_app_id(name):
+    def get_app_id(name, pinned_version=None):
+        if not pinned_version:
+            query = ((App.name == name) & (App.pinned == False))
+        else:
+            query = ((App.name == name) & (App.pinned == True) &
+                     (App.pinned_version == pinned_version))
         try:
-            app = App.get(App.name == name)
-        except App.DoesNotExist:
-            raise AppNotExist(name)
+            app = App.get(query)
+        except App.DoesNotExist as error:
+            msg = f"app {name}@{pinned_version} not found in database: {error}."
+            logger.error(msg)
+            raise AppNotExist(msg)
         return app.id
 
     @staticmethod
     def get_app_detail(name):
         try:
             app = App.get(App.name == name)
-        except App.DoesNotExist:
-            raise AppNotExist(name)
+        except App.DoesNotExist as error:
+            msg = f"app {name} not found in database: {error}"
+            logger.error(msg)
+            raise AppNotExist(msg)
         app_data = {
             'name': name,
             'source_type': app.source_type,

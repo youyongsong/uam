@@ -39,10 +39,11 @@ def install(app_name, pinned_version):
 
 @click.command()
 @click.argument("app_name")
+@click.option("--pinned_version", default="")
 @helper.handle_errors(user_errors=[app_excs.AppUninstallError])
-def uninstall(app_name):
+def uninstall(app_name, pinned_version):
     app_usecases.uninstall_app(DatabaseGateway, SystemGateway,
-                               DockerServiceGateway, app_name)
+                               DockerServiceGateway, app_name, pinned_version=pinned_version)
     helper.echo_success(f"{app_name} uninstalled.")
 
 

@@ -23,8 +23,10 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
         source_type, app_name, formula_lst = recognize_app_name(
             app_name, list_taps(DatabaseGateway))
     except app_excs.AppNameInvalid as error:
+        logger.error(f"can not recognize {app_name}'s format.'")
         raise AppNameFormatInvalid(app_name)
     except app_excs.TapsNotFound as error:
+        logger.error(f"{app_name}'s taps name not found in all avaliable taps.'")
         raise AppTapsNotFound(app_name)
 
     if DatabaseGateway.app_exists(app_name, pinned_version=pinned_version):
@@ -77,11 +79,12 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
 
 
 def uninstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
-                  app_name):
+                  app_name, pinned_version=None):
     try:
-        app_id = DatabaseGateway.get_app_id(app_name)
+        app_id = DatabaseGateway.get_app_id(app_name, pinned_version=pinned_version)
     except DatabaseGateway.AppNotExist:
-        raise AppUninstallNotFound(app_name)
+        logger.error(f"{app_name} not found in database.")
+        raise AppUninstallNotFound(app_name, pinned_version)
 
     volumes = DatabaseGateway.get_volumes(app_id)
     entrypoints = DatabaseGateway.get_active_entrypoints(app_id)
