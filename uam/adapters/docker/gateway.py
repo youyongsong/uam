@@ -21,7 +21,7 @@ class DockerServiceGateway:
 
     @staticmethod
     def delete_volume(vol_name):
-        logger.info(f'removing docker volume {vol_name}')
+        logger.info(f'removing docker volume {vol_name} ...')
         try:
             vol = docker_client.volumes.get(vol_name)
         except docker.errors.NotFound:
@@ -33,4 +33,23 @@ class DockerServiceGateway:
     @staticmethod
     def delete_volumes(vol_names):
         for v in vol_names:
-            DockerServiceGateway.delete_volume(v)
+            try:
+                DockerServiceGateway.delete_volume(v)
+            except docker.errors.NotFound:
+                logger.info(f"volume {v} not found, skipping it ...")
+            except docker.errors.APIError as err:
+                logger.warning(f"volume {v} delete error: {err}")
+
+    @staticmethod
+    def create_volume(vol_name, labels={}):
+        logger.info(f"creating docker volume {vol_name} ...")
+        vol = docker_client.volumes.create(vol_name, labels=labels)
+        logger.info(f"volume {vol_name} created.")
+
+    @staticmethod
+    def create_volumes(vol_names, labels={}):
+        for v in vol_names:
+            try:
+                DockerServiceGateway.create_volume(v, labels)
+            except docker.errors.APIError as err:
+                logger.warning(f"volume {v} create error: {err}")
