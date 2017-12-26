@@ -103,13 +103,15 @@ def create_app(source_type, taps_name, app_name, version, formula: str,
     return app
 
 
-def generate_app_shims(app):
+def generate_app_shims(app, selected_aliases=None):
     with open(os.path.join(os.path.dirname(__file__),
                            'shim.tmpl'), 'r') as f_handler:
         template = Template(f_handler.read())
 
     shims = {}
     for entry in app['entrypoints']:
+        if selected_aliases and entry["alias"] not in selected_aliases:
+            continue
         shim = template.render({
             'app': app,
             'entrypoint': entry,
@@ -175,7 +177,12 @@ def select_proper_version(versions, pinned_version=None):
     return latest[1]
 
 
-def build_formula_path(taps_name, app_name, version, ext="yaml"):
+def build_formula_folder_path(taps_name, app_name):
+    return os.path.join(TAPS_PATH, taps_name, FORMULA_FOLDER_NAME,
+                        app_name)
+
+
+def build_formula_path(taps_name, app_name, version):
     return os.path.join(TAPS_PATH, taps_name, FORMULA_FOLDER_NAME,
                         app_name, version)
 
@@ -199,3 +206,57 @@ def build_app_list(apps):
         app_info = {**app, **{"status": get_app_status(app)}}
         app_lst[app["name"]].append(app_info)
     return app_lst
+
+
+def diff_app_data(old_app, new_app):
+    change_set = {}
+
+    (change_set["deleted_volumes"],
+     change_set["added_volumes"],
+     change_set["unchanged_volumes"]) = _diff_lst(
+         old_app["volumes"], new_app["volumes"], ("path",)
+     )
+
+    (change_set["deleted_entrypoints"],
+     change_set["added_entrypoints"],
+     change_set["unchanged_entrypoints"]) = _diff_lst(
+         old_app["entrypoints"], new_app["entrypoints"],
+         ("alias", "container_entrypoint", "container_arguments")
+     )
+
+    (change_set["deleted_configs"],
+     change_set["added_configs"],
+     change_set["unchanged_configs"]) = _diff_lst(
+         old_app["configs"], new_app["configs"],
+         ("host_path", "container_path")
+     )
+
+    change_set["changed_meta_data"] = {
+        field: new_app[field]
+        for field in ("version", "description", "image", "environments",
+                      "shell")
+        if new_app[field] != old_app[field]
+    }
+
+    return change_set
+
+
+def _diff_lst(old_lst, new_lst, keys):
+    old_set = {tuple(i[k] for k in keys) for i in old_lst}
+    new_set = {tuple(i[k] for k in keys) for i in new_lst}
+    deleted_items = [
+        item
+        for key in old_set - new_set
+        for item in old_lst if key == tuple(item[k] for k in keys)
+    ]
+    added_items = [
+        item
+        for key in new_set - old_set
+        for item in new_lst if key == tuple(item[k] for k in keys)
+    ]
+    unchanged_items = [
+        item
+        for key in old_set & new_set
+        for item in old_lst if key == tuple(item[k] for k in keys)
+    ]
+    return deleted_items, added_items, unchanged_items

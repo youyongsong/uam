@@ -1,4 +1,5 @@
 import logging
+from functools import reduce
 
 from uam.settings import db
 
@@ -25,8 +26,8 @@ class DatabaseGateway:
 
     @staticmethod
     def delete_taps(alias):
-        taps = Taps.get(Taps.alias == alias)
-        taps.delete_instance()
+        tap = Taps.get(Taps.alias == alias)
+        tap.delete_instance()
 
     @staticmethod
     def list_taps():
@@ -89,13 +90,23 @@ class DatabaseGateway:
         return app.id
 
     @staticmethod
-    def get_app_detail(name):
+    def get_app_detail(name, pinned_version=None):
+        if not pinned_version:
+            query = ((App.name == name) & (App.pinned == False))
+        else:
+            query = ((App.name == name) & (App.pinned == True) &
+                     (App.pinned_version == pinned_version))
         try:
-            app = App.get(App.name == name)
+            app = App.get(query)
         except App.DoesNotExist as error:
             msg = f"app {name} not found in database: {error}"
             logger.error(msg)
             raise AppNotExist(msg)
+        return _build_app_data(app)
+
+    @staticmethod
+    def retrieve_app_detail(app_id):
+        app = App.get(App.id == app_id)
         return _build_app_data(app)
 
     @staticmethod
@@ -120,6 +131,10 @@ class DatabaseGateway:
             Config.insert_many(
                 [{**c, **{'app': app_model.id}} for c in configs]
             ).execute()
+
+    @staticmethod
+    def update_app_meta(app_id, changed_data):
+        App.update(**changed_data).where(App.id == app_id).execute()
 
     @staticmethod
     def delete_app(app_id):
@@ -152,6 +167,17 @@ class DatabaseGateway:
         EntryPoint.update(enabled=False).where(EntryPoint.alias << aliases).execute()
 
     @staticmethod
+    def delete_entrypoints(app_id, aliases):
+        EntryPoint.delete().where(
+            EntryPoint.app == app_id & EntryPoint.alias << aliases).execute()
+
+    @staticmethod
+    def store_entrypoints(app_id, entrypoints):
+        EntryPoint.insert_many(
+            [{"app": app_id, **e} for e in entrypoints]
+        ).execute()
+
+    @staticmethod
     def get_volumes(app_id):
         return [
             {
@@ -161,8 +187,37 @@ class DatabaseGateway:
             for v in Volume.select().where(Volume.app == app_id)
         ]
 
+    @staticmethod
+    def delete_volumes(app_id, vol_names):
+        Volume.delete().where(
+            Volume.name << vol_names & Volume.app == app_id).execute()
+
+    @staticmethod
+    def store_volumes(app_id, volumes):
+        Volume.insert_many(
+            [{"app": app_id, **v} for v in volumes]
+        ).execute()
+
+    @staticmethod
+    def delete_configs(app_id, configs):
+        query = reduce(lambda x, y: x | y, [
+            Config.host_path == c["host_path"] &
+            Config.container_path == c["container_path"] &
+            Config.app == app_id
+            for c in configs
+        ])
+        Config.delete().where(query).execute()
+
+    @staticmethod
+    def store_configs(app_id, configs):
+        Config.insert_many(
+            [{"app": app_id, **c} for c in configs]
+        ).execute()
+
+
 def _build_app_data(app):
     app_data = {
+        "id": app.id,
         'name': app.name,
         'source_type': app.source_type,
         'taps_alias': app.taps_alias,

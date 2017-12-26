@@ -3,7 +3,7 @@ import functools
 
 import click
 
-from uam.settings import UamUnknownError, ErrorTypes, DEBUG
+from uam.settings import UamBaseException, UamUnknownError, ErrorTypes, DEBUG
 
 
 class ClickHelper:
@@ -24,6 +24,7 @@ class ClickHelper:
 
     @staticmethod
     def handle_errors(user_errors=[], resource_errors=[]):
+        user_errors.insert(0, UamBaseException)
         def exception_decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):

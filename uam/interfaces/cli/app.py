@@ -19,7 +19,7 @@ def app():
 @click.command()
 @click.argument("app_name")
 @click.option("--pinned", default="")
-@helper.handle_errors(user_errors=[app_excs.AppInstallError])
+@helper.handle_errors()
 def install(app_name, pinned):
     try:
         app = app_usecases.install_app(DatabaseGateway, SystemGateway,
@@ -42,7 +42,7 @@ def install(app_name, pinned):
 @click.command()
 @click.argument("app_name")
 @click.option("--pinned", default="")
-@helper.handle_errors(user_errors=[app_excs.AppUninstallError])
+@helper.handle_errors()
 def uninstall(app_name, pinned):
     app_usecases.uninstall_app(DatabaseGateway, SystemGateway,
                                DockerServiceGateway, app_name, pinned_version=pinned)
@@ -51,7 +51,7 @@ def uninstall(app_name, pinned):
 
 @click.command("shell")
 @click.argument("app_name")
-@helper.handle_errors(user_errors=[app_excs.AppExecError])
+@helper.handle_errors()
 def exec_app(app_name):
     app_usecases.exec_app(DatabaseGateway, SystemGateway, app_name)
 
@@ -62,10 +62,20 @@ def list_apps():
     click.echo(display_app_list(app_lst))
 
 
+@click.command("upgrade")
+@click.argument("app_name")
+@helper.handle_errors()
+def upgrade_app(app_name):
+    click.echo(f"upgrading app {app_name} ...")
+    app_usecases.update_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name)
+    helper.echo_success(f"{app_name} upgraded.")
+
+
 app.add_command(install)
 app.add_command(uninstall)
 app.add_command(exec_app)
 app.add_command(list_apps)
+app.add_command(upgrade_app)
 
 
 def display_app_list(app_lst):
