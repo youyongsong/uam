@@ -141,11 +141,10 @@ class DatabaseGateway:
         App.get(App.id == app_id).delete_instance(recursive=True)
 
     @staticmethod
-    def get_conflicted_entrypoints(entrypoints):
+    def get_conflicted_entrypoints(aliases):
         return list(set([
             e.alias for e in EntryPoint.select().where(
-                (EntryPoint.alias << [item['alias'] for item in entrypoints]) &
-                (EntryPoint.enabled == True)
+                (EntryPoint.alias << aliases) & (EntryPoint.enabled == True)
             )
         ]))
 
@@ -163,13 +162,19 @@ class DatabaseGateway:
         ]
 
     @staticmethod
+    def enable_entrypoints(app_id, aliases):
+        EntryPoint.update(enabled=True).where(
+            (EntryPoint.alias << aliases) & (EntryPoint.app == app_id)
+        ).execute()
+
+    @staticmethod
     def disable_entrypoints(aliases):
         EntryPoint.update(enabled=False).where(EntryPoint.alias << aliases).execute()
 
     @staticmethod
     def delete_entrypoints(app_id, aliases):
         EntryPoint.delete().where(
-            EntryPoint.app == app_id & EntryPoint.alias << aliases).execute()
+            (EntryPoint.app == app_id) & (EntryPoint.alias << aliases)).execute()
 
     @staticmethod
     def store_entrypoints(app_id, entrypoints):
@@ -190,7 +195,7 @@ class DatabaseGateway:
     @staticmethod
     def delete_volumes(app_id, vol_names):
         Volume.delete().where(
-            Volume.name << vol_names & Volume.app == app_id).execute()
+            (Volume.name << vol_names) & (Volume.app == app_id)).execute()
 
     @staticmethod
     def store_volumes(app_id, volumes):

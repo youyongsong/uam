@@ -112,6 +112,9 @@ def generate_app_shims(app, selected_aliases=None):
     for entry in app['entrypoints']:
         if selected_aliases and entry["alias"] not in selected_aliases:
             continue
+        if not entry["enabled"]:
+            continue
+        logger.info(f"generating app shim {entry['alias']} ...")
         shim = template.render({
             'app': app,
             'entrypoint': entry,
@@ -140,14 +143,17 @@ def generate_shell_shim(app):
         "network": GLOBAL_NETWORK_NAME,
     })
 
+def filter_disabled_aliases(entrypoints):
+    return [e["alias"] for e in entrypoints if not e["enabled"]]
 
-def deactive_entrypoints(entrypoints, aliases):
-    return [
-        {**e, **{'enabled': False}}
-        for e in entrypoints
-        if e['alias'] in aliases
-    ]
-
+def deactive_entrypoints(entrypoints, aliases=None):
+    if not aliases:
+        return [{**e, "enabled": False} for e in entrypoints]
+    else:
+        return [
+            {**e, "enabled": False}
+            for e in entrypoints if e['alias'] in aliases
+        ]
 
 def select_proper_version(versions, pinned_version=None):
     # format versions

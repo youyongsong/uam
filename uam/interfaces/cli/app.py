@@ -28,7 +28,7 @@ def install(app_name, pinned):
         val = helper.prompt("Commands '{}' already exist. "
                             "Type 'y' to override them, 'n' to ignore them"
                             .format(', '.join(exc.conflicted_aliases)))
-        if val == 'y':
+        if val.strip() == 'y':
             app = app_usecases.install_app(DatabaseGateway, SystemGateway,
                                            app_name, override_entrypoints=True,
                                            pinned_version=pinned)
@@ -71,11 +71,22 @@ def upgrade_app(app_name):
     helper.echo_success(f"{app_name} upgraded.")
 
 
+@click.command("active")
+@click.argument("app_name")
+@click.option("--pinned", default="")
+@helper.handle_errors()
+def active(app_name, pinned):
+    click.echo(f"activing app {app_name}{'📌 '+pinned if pinned else ''} ...")
+    app_usecases.active_app(DatabaseGateway, SystemGateway, app_name, pinned)
+    helper.echo_success(f"{app_name}{'📌 '+pinned if pinned else ''} actived.")
+
+
 app.add_command(install)
 app.add_command(uninstall)
 app.add_command(exec_app)
 app.add_command(list_apps)
 app.add_command(upgrade_app)
+app.add_command(active)
 
 
 def display_app_list(app_lst):
