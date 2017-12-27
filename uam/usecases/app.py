@@ -8,11 +8,12 @@ from uam.usecases.exceptions.app import (AppNameFormatInvalid, AppTapsNotFound,
                                          AppFormulaMalformed, AppEntryPointsConflicted,
                                          AppNotInstalled, UpdateLocalTapApp,
                                          NoNewVersionFound)
-from uam.entities.app import (recognize_app_name, create_app,
+from uam.entities.app import (AppStatus, recognize_app_name, create_app,
                               deactive_entrypoints, generate_app_shims,
                               generate_shell_shim, select_proper_version,
                               build_formula_path, build_app_list,
-                              build_formula_folder_path, diff_app_data)
+                              build_formula_folder_path, diff_app_data,
+                              get_app_status, filter_disabled_aliases)
 from uam.entities.exceptions import app as app_excs
 
 
@@ -65,7 +66,7 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
         raise AppFormulaMalformed(app_name, taps_name)
 
     conflicted_aliases = DatabaseGateway.get_conflicted_entrypoints(
-        app['entrypoints'])
+        [e["alias"] for e in app["entrypoints"]])
     if override_entrypoints is None:
         if conflicted_aliases:
             raise AppEntryPointsConflicted(conflicted_aliases)
@@ -204,4 +205,35 @@ def update_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name):
     logger.info("regenerating all shims ...")
     app_data = DatabaseGateway.retrieve_app_detail(app["id"])
     shims = generate_app_shims(app_data)
+    SystemGateway.store_app_shims(shims)
+
+
+def active_app(DatabaseGateway, SystemGateway, app_name, pinned_version=None):
+    logger.info("searching app inside database ...")
+    try:
+        app = DatabaseGateway.get_app_detail(app_name,
+                                             pinned_version)
+    except DatabaseGateway.AppNotExist:
+        logger.warning(f"{app_name} {pinned_version if pinned_version else ''} "
+                       "not found in database.")
+        raise AppNotInstalled(app_name, pinned_version)
+
+    logger.info("checking if app's status ...")
+    if get_app_status(app) == AppStatus.Active:
+        logger.info(f"{app_name} is active now, nothing to do else ...")
+        return
+
+    logger.info("filtering app's disabled entrypoints ...")
+    disabled_aliases = filter_disabled_aliases(app["entrypoints"])
+    logger.info(f"checking if {disabled_aliases} conflicted with existed aliases ...")
+    conflicted_aliases = DatabaseGateway.get_conflicted_entrypoints(disabled_aliases)
+    if conflicted_aliases:
+        logger.info(f"disabling existed conflicted aliases {conflicted_aliases} ...")
+        DatabaseGateway.disable_entrypoints(conflicted_aliases)
+    logger.info(f"enabling app's entrypoints {disabled_aliases} ...")
+    DatabaseGateway.enable_entrypoints(app["id"], disabled_aliases)
+
+    logger.info("regenerating app's shims ...")
+    app = DatabaseGateway.retrieve_app_detail(app["id"])
+    shims = generate_app_shims(app)
     SystemGateway.store_app_shims(shims)
