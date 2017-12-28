@@ -122,15 +122,18 @@ class DatabaseGateway:
         configs = app.pop('configs')
         with db.atomic():
             app_model = App.create(**app)
-            EntryPoint.insert_many(
-                [{**e, **{'app': app_model.id}} for e in entrypoints]
-            ).execute()
-            Volume.insert_many(
-                [{**v, **{'app': app_model.id}} for v in volumes]
-            ).execute()
-            Config.insert_many(
-                [{**c, **{'app': app_model.id}} for c in configs]
-            ).execute()
+            if entrypoints:
+                EntryPoint.insert_many(
+                    [{**e, **{'app': app_model.id}} for e in entrypoints]
+                ).execute()
+            if volumes:
+                Volume.insert_many(
+                    [{**v, **{'app': app_model.id}} for v in volumes]
+                ).execute()
+            if configs:
+                Config.insert_many(
+                    [{**c, **{'app': app_model.id}} for c in configs]
+                ).execute()
 
     @staticmethod
     def update_app_meta(app_id, changed_data):
@@ -178,6 +181,8 @@ class DatabaseGateway:
 
     @staticmethod
     def store_entrypoints(app_id, entrypoints):
+        if not entrypoints:
+            return
         EntryPoint.insert_many(
             [{"app": app_id, **e} for e in entrypoints]
         ).execute()
@@ -199,6 +204,8 @@ class DatabaseGateway:
 
     @staticmethod
     def store_volumes(app_id, volumes):
+        if not volumes:
+            return
         Volume.insert_many(
             [{"app": app_id, **v} for v in volumes]
         ).execute()
@@ -215,6 +222,8 @@ class DatabaseGateway:
 
     @staticmethod
     def store_configs(app_id, configs):
+        if not configs:
+            return
         Config.insert_many(
             [{"app": app_id, **c} for c in configs]
         ).execute()
