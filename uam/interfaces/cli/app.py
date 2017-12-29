@@ -76,9 +76,20 @@ def upgrade_app(app_name):
 @click.option("--pinned", default="")
 @helper.handle_errors()
 def active(app_name, pinned):
-    click.echo(f"activing app {app_name}{'📌 '+pinned if pinned else ''} ...")
+    click.echo(f"activing app {format_name(app_name, pinned)} ...")
     app_usecases.active_app(DatabaseGateway, SystemGateway, app_name, pinned)
-    helper.echo_success(f"{app_name}{'📌 '+pinned if pinned else ''} actived.")
+    helper.echo_success(f"{format_name(app_name, pinned)} actived.")
+
+
+@click.command()
+@click.argument("app_name")
+@click.option("--pinned", default="")
+@helper.handle_errors()
+def reinstall(app_name, pinned):
+    click.echo(f"reinstalling app {format_name(app_name, pinned)} ...")
+    app_usecases.reinstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
+                               app_name, pinned)
+    helper.echo_success(f"{format_name(app_name, pinned)} reinstalled.")
 
 
 app.add_command(install)
@@ -87,6 +98,14 @@ app.add_command(exec_app)
 app.add_command(list_apps)
 app.add_command(upgrade_app)
 app.add_command(active)
+app.add_command(reinstall)
+
+
+def format_name(app_name, pinned=None):
+    if pinned:
+        return f"{app_name}📌 {pinned}"
+    else:
+        return app_name
 
 
 def display_app_list(app_lst):
