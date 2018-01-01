@@ -51,9 +51,10 @@ def uninstall(app_name, pinned):
 
 @click.command("shell")
 @click.argument("app_name")
+@click.option("--pinned", default="")
 @helper.handle_errors()
-def exec_app(app_name):
-    app_usecases.exec_app(DatabaseGateway, SystemGateway, app_name)
+def exec_app(app_name, pinned):
+    app_usecases.exec_app(DatabaseGateway, SystemGateway, app_name, pinned_version=pinned)
 
 
 @click.command("ls")

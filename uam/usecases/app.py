@@ -103,9 +103,10 @@ def uninstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
     DatabaseGateway.delete_app(app_id)
 
 
-def exec_app(DatabaseGateway, SystemGateway, app_name, arguments=''):
+def exec_app(DatabaseGateway, SystemGateway, app_name, pinned_version=None,
+             arguments=''):
     try:
-        app = DatabaseGateway.get_app_detail(app_name)
+        app = DatabaseGateway.get_app_detail(app_name, pinned_version=pinned_version)
     except DatabaseGateway.AppNotExist:
         logger.error(f"{app_name} not found in database.")
         raise AppNotInstalled(app_name) 
