@@ -7,10 +7,10 @@ import yaml
 from jinja2 import Template
 from semantic_version import Version
 
-from uam.settings import (TAPS_PATH, FORMULA_FOLDER_NAME,
+from uam.settings import (TAP_PATH, FORMULA_FOLDER_NAME,
                           CONTAINER_META_LABELS, GLOBAL_NETWORK_NAME,
                           SourceTypes)
-from uam.entities.exceptions.app import (TapsNotFound, AppNameInvalid,
+from uam.entities.exceptions.app import (TapNotFound, AppNameInvalid,
                                          FormulaMalformed, NoValidVersion,
                                          PinnedVersionNotExist)
 
@@ -29,26 +29,26 @@ def recognize_app_name(app_name, taps):
         source_type = SourceTypes.LOCAL
         path = app_name
         app_name = os.path.splitext(os.path.basename(app_name)),
-        formula_lst = [{'taps_name': '', 'path': 'path'}]
+        formula_lst = [{'tap_name': '', 'path': 'path'}]
     else:
         lst = app_name.split('/')
-        source_type = SourceTypes.TAPS
+        source_type = SourceTypes.TAP
         if len(lst) == 2:
-            taps_name, app_name = lst
-            if taps_name not in [t['alias'] for t in taps]:
-                logger.error(f"can not recognize {app_name}'s taps.")
-                raise TapsNotFound()
+            tap_name, app_name = lst
+            if tap_name not in [t['alias'] for t in taps]:
+                logger.error(f"can not recognize {app_name}'s tap.")
+                raise TapNotFound()
             formula_lst = [{
-                'taps_name': taps_name,
-                'path': os.path.join(TAPS_PATH, taps_name, FORMULA_FOLDER_NAME,
+                'tap_name': tap_name,
+                'path': os.path.join(TAP_PATH, tap_name, FORMULA_FOLDER_NAME,
                                      app_name)
             }]
         elif len(lst) == 1:
             app_name = lst[0]
             formula_lst = [
                 {
-                    'taps_name': t['alias'],
-                    'path': os.path.join(TAPS_PATH, t['alias'],
+                    'tap_name': t['alias'],
+                    'path': os.path.join(TAP_PATH, t['alias'],
                                          FORMULA_FOLDER_NAME, app_name)
                 }
                 for t in taps
@@ -59,7 +59,7 @@ def recognize_app_name(app_name, taps):
     return (source_type, app_name, formula_lst)
 
 
-def create_app(source_type, taps_name, app_name, version, formula: str,
+def create_app(source_type, tap_name, app_name, version, formula: str,
                pinned_version=None):
     try:
         data = yaml.load(formula)
@@ -72,7 +72,7 @@ def create_app(source_type, taps_name, app_name, version, formula: str,
     app = {
         'name': app_name,
         'source_type': source_type,
-        'taps_alias': taps_name,
+        'tap_alias': tap_name,
         'version': version,
         'description': data.get('description', ''),
         'image': data['image'],
@@ -183,13 +183,13 @@ def select_proper_version(versions, pinned_version=None):
     return latest[1]
 
 
-def build_formula_folder_path(taps_name, app_name):
-    return os.path.join(TAPS_PATH, taps_name, FORMULA_FOLDER_NAME,
+def build_formula_folder_path(tap_name, app_name):
+    return os.path.join(TAP_PATH, tap_name, FORMULA_FOLDER_NAME,
                         app_name)
 
 
-def build_formula_path(taps_name, app_name, version):
-    return os.path.join(TAPS_PATH, taps_name, FORMULA_FOLDER_NAME,
+def build_formula_path(tap_name, app_name, version):
+    return os.path.join(TAP_PATH, tap_name, FORMULA_FOLDER_NAME,
                         app_name, version)
 
 

@@ -2,9 +2,9 @@ class AppNotExist(Exception):
     pass
 
 
-class TapsAliasConflict(Exception):
+class TapAliasConflict(Exception):
     pass
 
 
-class TapsAddressConflict(Exception):
+class TapAddressConflict(Exception):
     pass
