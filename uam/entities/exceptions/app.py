@@ -2,7 +2,7 @@ class RecognizeAppError(ValueError):
     pass
 
 
-class TapsNotFound(RecognizeAppError):
+class TapNotFound(RecognizeAppError):
     pass
 
 

@@ -8,7 +8,7 @@ from uam.settings import db
 
 APP_SOURCE_TYPES = (
     ('local', 'local'),
-    ('taps', 'taps')
+    ('tap', 'tap')
 )
 
 
@@ -21,7 +21,7 @@ class JSONField(TextField):
         return json.loads(value)
 
 
-class Taps(Model):
+class Tap(Model):
     alias = CharField(max_length=128, unique=True)
     address = CharField(max_length=2048, unique=True)
     priority = IntegerField(default=0)
@@ -33,7 +33,7 @@ class Taps(Model):
 class App(Model):
     name = CharField(max_length=64)
     source_type = CharField(max_length=32, choices=APP_SOURCE_TYPES)
-    taps_alias = CharField(max_length=128)
+    tap_alias = CharField(max_length=128)
     version = CharField(max_length=128)
     description = TextField(default='')
     image = TextField()

@@ -22,7 +22,7 @@ def get_address_by_alias(alias, taps):
     ][0]
 
 
-def validiate_new_taps(alias, address):
+def validiate_new_tap(alias, address):
     if alias in [t["alias"] for t in BUILTIN_TAPS]:
         error = AliasConflict(alias) 
         logger.error(error.message)
@@ -40,9 +40,8 @@ def build_sorted_taps(external_taps):
                   key=lambda k: k["priority"], reverse=True)
 
 
-def is_taps_builtin(alias):
+def is_tap_builtin(alias):
     for t in BUILTIN_TAPS:
         if alias == t["alias"]:
             return True
-    else:
-        return False
+    return False

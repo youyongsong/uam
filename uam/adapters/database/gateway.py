@@ -3,9 +3,9 @@ from functools import reduce
 
 from uam.settings import db
 
-from .models import Taps, App, EntryPoint, Volume, Config
-from .exceptions import (AppNotExist, TapsAliasConflict,
-                         TapsAddressConflict)
+from .models import Tap, App, EntryPoint, Volume, Config
+from .exceptions import (AppNotExist, TapAliasConflict,
+                         TapAddressConflict)
 
 
 logger = logging.getLogger(__name__)
@@ -13,20 +13,20 @@ logger = logging.getLogger(__name__)
 
 class DatabaseGateway:
     AppNotExist = AppNotExist
-    TapsAliasConflict = TapsAliasConflict
-    TapsAddressConflict = TapsAddressConflict
+    TapAliasConflict = TapAliasConflict
+    TapAddressConflict = TapAddressConflict
 
     @staticmethod
     def assure_tables():
-        db.create_tables([Taps, App, EntryPoint, Volume, Config], safe=True)
+        db.create_tables([Tap, App, EntryPoint, Volume, Config], safe=True)
 
     @staticmethod
-    def store_taps(taps):
-        Taps.create(**taps)
+    def store_tap(tap):
+        Tap.create(**tap)
 
     @staticmethod
-    def delete_taps(alias):
-        tap = Taps.get(Taps.alias == alias)
+    def delete_tap(alias):
+        tap = Tap.get(Tap.alias == alias)
         tap.delete_instance()
 
     @staticmethod
@@ -37,24 +37,24 @@ class DatabaseGateway:
                 'address': t.address,
                 'priority': t.priority
             }
-            for t in Taps.select()
+            for t in Tap.select()
         ]
 
     @staticmethod
-    def valid_taps_conflict(alias, address):
-        if Taps.select().where(Taps.alias == alias):
-            msg = f"taps named {alias} already existed."
+    def valid_tap_conflict(alias, address):
+        if Tap.select().where(Tap.alias == alias):
+            msg = f"tap named {alias} already existed."
             logger.error(msg)
-            raise TapsAliasConflict(msg)
-        if Taps.select().where(Taps.address == address):
-            msg = f"taps addressed {address} already existed."
+            raise TapAliasConflict(msg)
+        if Tap.select().where(Tap.address == address):
+            msg = f"tap addressed {address} already existed."
             logger.error(msg)
-            raise TapsAddressConflict(msg)
+            raise TapAddressConflict(msg)
         return True
 
     @staticmethod
-    def taps_exists(alias):
-        if Taps.select().where(Taps.alias == alias):
+    def tap_exists(alias):
+        if Tap.select().where(Tap.alias == alias):
             return True
         return False
 
@@ -234,7 +234,7 @@ def _build_app_data(app):
         "id": app.id,
         'name': app.name,
         'source_type': app.source_type,
-        'taps_alias': app.taps_alias,
+        'tap_alias': app.tap_alias,
         'version': app.version,
         'description': app.description,
         'image': app.image,

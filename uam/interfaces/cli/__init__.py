@@ -1,6 +1,6 @@
 import click
 
-from .taps import taps
+from .tap import tap
 from .app import app
 from .system import system
 
@@ -10,6 +10,6 @@ def uam():
     pass
 
 
-uam.add_command(taps)
+uam.add_command(tap)
 uam.add_command(app)
 uam.add_command(system)

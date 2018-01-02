@@ -19,9 +19,9 @@ if not os.path.isdir(UAM_PATH):
 DB_PATH = os.path.join(UAM_PATH, "uam.db")
 db = SqliteDatabase(DB_PATH)
 
-TAPS_PATH = os.path.join(UAM_PATH, 'taps')
-if not os.path.exists(TAPS_PATH):
-    os.makedirs(TAPS_PATH)
+TAP_PATH = os.path.join(UAM_PATH, 'taps')
+if not os.path.exists(TAP_PATH):
+    os.makedirs(TAP_PATH)
 
 BIN_PATH = os.path.join(UAM_PATH, 'bin')
 if not os.path.exists(BIN_PATH):
@@ -66,7 +66,7 @@ class ErrorTypes:
 
 class SourceTypes:
     LOCAL = 'local'
-    TAPS = 'taps'
+    TAP = 'tap'
 
 
 class UamBaseException(Exception):
@@ -75,7 +75,7 @@ class UamBaseException(Exception):
     help_text = ''
 
     def __init__(self):
-        return super(UamBaseException, self).__init__(self.help_text)
+        super(UamBaseException, self).__init__(self.help_text)
 
 
 class UamUnknownError(UamBaseException):
@@ -85,7 +85,7 @@ class UamUnknownError(UamBaseException):
 
     def __init__(self, exc):
         self.help_text = self.help_text.format(exc)
-        return super(UamUnknownError, self).__init__()
+        super(UamUnknownError, self).__init__()
 
 
 class RequireDebugTrue(logging.Filter):

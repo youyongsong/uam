@@ -1,8 +1,8 @@
 import logging
 
 from uam.settings import SourceTypes
-from uam.usecases.taps import list_taps
-from uam.usecases.exceptions.app import (AppNameFormatInvalid, AppTapsNotFound,
+from uam.usecases.tap import list_taps
+from uam.usecases.exceptions.app import (AppNameFormatInvalid, AppTapNotFound,
                                          AppAlreadyExist, NoProperVersionMatched,
                                          NoValidVersion, AppFormulaNotFound,
                                          AppFormulaMalformed, AppEntryPointsConflicted,
@@ -25,12 +25,12 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
     try:
         source_type, app_name, formula_lst = recognize_app_name(
             app_name, list_taps(DatabaseGateway))
-    except app_excs.AppNameInvalid as error:
+    except app_excs.AppNameInvalid:
         logger.error(f"can not recognize {app_name}'s format.'")
         raise AppNameFormatInvalid(app_name)
-    except app_excs.TapsNotFound as error:
-        logger.error(f"{app_name}'s taps name not found in all avaliable taps.'")
-        raise AppTapsNotFound(app_name)
+    except app_excs.TapNotFound as error:
+        logger.error(f"{app_name}'s tap name not found in all avaliable tap.'")
+        raise AppTapNotFound(app_name)
 
     if DatabaseGateway.app_exists(app_name, pinned_version=pinned_version):
         raise AppAlreadyExist(app_name)
@@ -38,33 +38,33 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
     # get the formula content
     if source_type == SourceTypes.LOCAL:
         formula_content = SystemGateway.read_yaml_content(formula_lst[0]['path'])
-        taps_name = None
+        tap_name = None
     else:
         for formula in formula_lst:
             if SystemGateway.isfolder(formula['path']):
-                taps_name, formula_folder = formula['taps_name'], formula['path']
+                tap_name, formula_folder = formula['tap_name'], formula['path']
                 break
         else:
             raise AppFormulaNotFound(app_name)
 
-        logger.info(f"{app_name}'s formula found in taps {taps_name}.")
+        logger.info(f"{app_name}'s formula found in tap {tap_name}.")
         versions = SystemGateway.list_yaml_names(formula_folder)
         try:
             version = select_proper_version(versions, pinned_version=pinned_version)
         except app_excs.NoValidVersion:
-            raise NoValidVersion(taps_name)
+            raise NoValidVersion(tap_name)
         except app_excs.PinnedVersionNotExist:
             raise NoProperVersionMatched(pinned_version)
         logger.info(f"version {version} will be installed.")
-        formula_path = build_formula_path(taps_name, app_name, version)
+        formula_path = build_formula_path(tap_name, app_name, version)
         formula_content = SystemGateway.read_yaml_content(formula_path)
 
     # create app data structure using formula content and metadata
     try:
-        app = create_app(source_type, taps_name, app_name, version, formula_content,
+        app = create_app(source_type, tap_name, app_name, version, formula_content,
                          pinned_version=pinned_version)
     except app_excs.FormulaMalformed as error:
-        raise AppFormulaMalformed(app_name, taps_name)
+        raise AppFormulaMalformed(app_name, tap_name)
 
     conflicted_aliases = DatabaseGateway.get_conflicted_entrypoints(
         [e["alias"] for e in app["entrypoints"]])
@@ -127,7 +127,7 @@ def update_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name):
         raise UpdateLocalTapApp(app_name)
 
     logger.info(f"checking if new version of {app_name} ready ...")
-    tap_name = app["taps_alias"]
+    tap_name = app["tap_alias"]
     formula_folder_path = build_formula_folder_path(tap_name, app_name)
     versions = SystemGateway.list_yaml_names(formula_folder_path)
     try:
@@ -164,16 +164,16 @@ def reinstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name
     app = _get_app_from_db(DatabaseGateway, app_name, pinned_version=pinned_version)
 
     logger.info(f"reading {app_name}'s formula ...")
-    formula_path = build_formula_path(app["taps_alias"], app_name, app["version"])
+    formula_path = build_formula_path(app["tap_alias"], app_name, app["version"])
     formula_content = SystemGateway.read_yaml_content(formula_path)
 
     logger.info("rebuilding app data from formula ...")
     try:
-        new_app = create_app(app["source_type"], app["taps_alias"], app_name,
+        new_app = create_app(app["source_type"], app["tap_alias"], app_name,
                              app["version"], formula_content)
     except app.app_excs.FormulaMalformed as error:
         logger.error(f"app's formula is not a valid yaml file: {error}")
-        raise AppFormulaMalformed(app_name, app["taps_alias"])
+        raise AppFormulaMalformed(app_name, app["tap_alias"])
 
     logger.info("diffing the current formula with the installed one ...")
     change_set = diff_app_data(app, new_app)

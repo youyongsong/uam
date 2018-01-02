@@ -9,16 +9,16 @@ class AppNameFormatInvalid(UamBaseException):
         self.help_text = self.help_text.format(app_name)
         super(AppNameFormatInvalid, self).__init__()
 
-class AppTapsNotFound(UamBaseException):
+class AppTapNotFound(UamBaseException):
     help_text = """\
-taps of {} does not exist, you can try to install add the \
-taps, then install the app again.
+tap of {} does not exist, you can try to install add the \
+tap, then install the app again.
 """
 
     def __init__(self, app_name):
         self.app_name = app_name
         self.help_text = self.help_text.format(app_name)
-        super(AppTapsNotFound, self).__init__()
+        super(AppTapNotFound, self).__init__()
 
 
 class AppAlreadyExist(UamBaseException):
@@ -40,15 +40,15 @@ class NoProperVersionMatched(UamBaseException):
 
 
 class NoValidVersion(UamBaseException):
-    help_text = "all formulas inside the taps {} is bad named, the taps is bad."
+    help_text = "all formulas inside the tap {} is bad named, the tap is bad."
 
-    def __init__(self, taps_name):
-        self.help_text = self.help_text.format(taps_name)
+    def __init__(self, tap_name):
+        self.help_text = self.help_text.format(tap_name)
         super(NoValidVersion, self).__init__()
 
 
 class AppFormulaNotFound(UamBaseException):
-    help_text = "app {} does not have a matched formula in all avalibale taps."
+    help_text = "app {} does not have a matched formula in all avalibale tap."
 
     def __init__(self, app_name):
         self.app_name = app_name
@@ -58,14 +58,14 @@ class AppFormulaNotFound(UamBaseException):
 
 class AppFormulaMalformed(UamBaseException):
     help_text = """\
-{}'s formula in taps {} is not a valid yaml, you should submit an issue \
-to the owner of the taps.\
+{}'s formula in tap {} is not a valid yaml, you should submit an issue \
+to the owner of the tap.\
 """
 
-    def __init__(self, app_name, taps_name):
+    def __init__(self, app_name, tap_name):
         self.app_name = app_name
-        self.taps_name = taps_name
-        self.help_text = self.help_text.format(app_name, taps_name)
+        self.tap_name = tap_name
+        self.help_text = self.help_text.format(app_name, tap_name)
         super(AppFormulaMalformed, self).__init__()
 
 
