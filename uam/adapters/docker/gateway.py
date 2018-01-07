@@ -1,4 +1,5 @@
 import logging
+import subprocess
 
 import docker
 
@@ -53,3 +54,8 @@ class DockerServiceGateway:
                 DockerServiceGateway.create_volume(v, labels)
             except docker.errors.APIError as err:
                 logger.warning(f"volume {v} create error: {err}")
+
+    @staticmethod
+    def pull_image(image_name):
+        logger.info(f"pulling docker image {image_name} ...")
+        subprocess.run(f"docker pull {image_name}", shell=True)

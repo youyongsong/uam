@@ -274,3 +274,16 @@ def _apply_change_set(DatabaseGateway, SystemGateway, DockerServiceGateway,
     app_data = DatabaseGateway.retrieve_app_detail(app_id)
     shims = generate_app_shims(app_data)
     SystemGateway.store_app_shims(shims)
+
+
+def download_app_image(DatabaseGateway, DockerServiceGateway, app_name, pinned_version=None):
+    logger.info("searching app inside database ...")
+    try:
+        app = DatabaseGateway.get_app_detail(app_name,
+                                             pinned_version)
+    except DatabaseGateway.AppNotExist:
+        logger.warning(f"{app_name} {pinned_version if pinned_version else ''} "
+                       "not found in database.")
+        raise AppNotInstalled(app_name, pinned_version)
+    logger.info(f"downloding {app_name}'s image ...")
+    DockerServiceGateway.pull_image(app["image"])
