@@ -25,10 +25,8 @@ def install(app_name, pinned):
         app = app_usecases.install_app(DatabaseGateway, SystemGateway,
                                        app_name, pinned_version=pinned)
     except app_excs.AppEntryPointsConflicted as exc:
-        val = helper.prompt("Commands '{}' already exist. "
-                            "Type 'y' to override them, 'n' to ignore them"
-                            .format(', '.join(exc.conflicted_aliases)))
-        if val.strip() == 'y':
+        if helper.confirm("Commands '{}' already exist, do you want to override them? "
+                          .format(', '.join(exc.conflicted_aliases))):
             app = app_usecases.install_app(DatabaseGateway, SystemGateway,
                                            app_name, override_entrypoints=True,
                                            pinned_version=pinned)
@@ -36,6 +34,9 @@ def install(app_name, pinned):
             app = app_usecases.install_app(DatabaseGateway, SystemGateway,
                                            app_name, override_entrypoints=False,
                                            pinned_version=pinned)
+    if helper.confirm(f"Do you want to download image {app['image']} now?"):
+        app_usecases.download_app_image(DatabaseGateway, DockerServiceGateway,
+                                        app["name"], pinned_version=pinned)
     helper.echo_success(f"{app['name']} installed.")
 
 

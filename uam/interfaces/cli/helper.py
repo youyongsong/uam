@@ -43,8 +43,12 @@ class ClickHelper:
         return exception_decorator
 
     @staticmethod
-    def prompt(msg):
-        return click.prompt("🤔  " + msg)
+    def prompt(msg, *args, **kwargs):
+        return click.prompt("🤔  " + msg, *args, **kwargs)
+
+    @staticmethod
+    def confirm(msg, *args, **kwargs):
+        return click.confirm("🤔  " + msg, *args, **kwargs)
 
     @staticmethod
     def echo_success(msg):
