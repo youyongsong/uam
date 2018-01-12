@@ -22,7 +22,7 @@ def tap():
 def add(alias, address, priority):
     click.echo(f"adding tap {alias} using address {address} ...")
     tap_usecases.add_tap(SystemGateway, DatabaseGateway,
-                           alias, address, priority=priority)
+                         alias, address, priority=priority)
     helper.echo_success(f"{alias} added!")
 
 

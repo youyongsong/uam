@@ -25,6 +25,7 @@ class ClickHelper:
     @staticmethod
     def handle_errors(user_errors=[], resource_errors=[]):
         user_errors.insert(0, UamBaseException)
+
         def exception_decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
@@ -52,7 +53,7 @@ class ClickHelper:
 
     @staticmethod
     def echo_success(msg):
-        return click.echo("🍻🍻  "+msg)
+        return click.echo("🍻🍻  " + msg)
 
     @staticmethod
     def echo_errors(error):

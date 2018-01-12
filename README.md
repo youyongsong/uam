@@ -1,21 +1,14 @@
 # uam
-Universal application manager.
+uam is abbreviation of universal application manager.
 
-## Development
-### Create a docker environment
-```
-docker run -dt -v `pwd`:/app --workdir /app --entrypoint bash --name uam -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`/uamlib/:/usr/local/uam python:2
-docker exec -ti uam bash
-```
+## Local Development
+uam project use [invoke](http://docs.pyinvoke.org/en/latest/getting_started.html) as task execution tool. All development related tasks can be found using `inv -l`. 
 
-### Run Locally
-1. Run without installation:
-   ```
-   python -m uam
-   ```
+### Prerequirements
+* `python3`, `pip3`
+* run `pip3 install -r requirements.txt` to setup development environment.
 
-2. Install locally and run:
-   ```
-   pip install --editable .
-   uam
-   ```
+### Common Tasks
+* `inv lint`: you should run this command to check your code quality before every time you want to make a commit.
+* `inv install`: this command will install ake cli from source code in editable mode(the changes of source code will apply to ake cli real time).
+* `inv build`: this command will package ake into a single executable file. The format of the executable file depends on environment the command run, this task is commonly used in ci environment.

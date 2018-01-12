@@ -109,7 +109,7 @@ def exec_app(DatabaseGateway, SystemGateway, app_name, pinned_version=None,
         app = DatabaseGateway.get_app_detail(app_name, pinned_version=pinned_version)
     except DatabaseGateway.AppNotExist:
         logger.error(f"{app_name} not found in database.")
-        raise AppNotInstalled(app_name) 
+        raise AppNotInstalled(app_name)
     shim = generate_shell_shim(app)
     SystemGateway.run_temporay_script(shim, arguments=arguments)
 

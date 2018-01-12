@@ -106,7 +106,7 @@ class SystemGateway:
                 break
         else:
             raise YamlFileNotExist(path)
-        
+
         with open(path, "r") as f_handler:
             content = f_handler.read()
         return content

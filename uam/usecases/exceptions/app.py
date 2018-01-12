@@ -9,6 +9,7 @@ class AppNameFormatInvalid(UamBaseException):
         self.help_text = self.help_text.format(app_name)
         super(AppNameFormatInvalid, self).__init__()
 
+
 class AppTapNotFound(UamBaseException):
     help_text = """\
 tap of {} does not exist, you can try to install add the \
@@ -72,7 +73,7 @@ to the owner of the tap.\
 class AppEntryPointsConflicted(UamBaseException):
     help_text = """\
 some entrypoints specified in the app formula are conflicted with the entrypoints\
-of installed apps. the conflicted entrypoints are: {}\ 
+of installed apps. the conflicted entrypoints are: {}\
 """
 
     def __init__(self, conflicted_aliases):

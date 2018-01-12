@@ -143,8 +143,10 @@ def generate_shell_shim(app):
         "network": GLOBAL_NETWORK_NAME,
     })
 
+
 def filter_disabled_aliases(entrypoints):
     return [e["alias"] for e in entrypoints if not e["enabled"]]
+
 
 def deactive_entrypoints(entrypoints, aliases=None):
     if not aliases:
@@ -154,6 +156,7 @@ def deactive_entrypoints(entrypoints, aliases=None):
             {**e, "enabled": False}
             for e in entrypoints if e['alias'] in aliases
         ]
+
 
 def select_proper_version(versions, pinned_version=None):
     # format versions

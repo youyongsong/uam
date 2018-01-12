@@ -42,7 +42,7 @@ def add_tap(SystemGateway, DatabaseGateway, alias, address, priority=0):
 def remove_tap(SystemGateway, DatabaseGateway, alias):
     logging.info("checking if tap exists ...")
     if is_tap_builtin(alias):
-        error = TapRemoveBuiltin(alias) 
+        error = TapRemoveBuiltin(alias)
         logger.error(error.help_text)
         raise error
     if not DatabaseGateway.tap_exists(alias):

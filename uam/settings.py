@@ -99,19 +99,19 @@ class RequireDebugFalse(logging.Filter):
 
 
 LOG_COLORS = {
-    'DEBUG':    'white',
-    'INFO':     'white',
-    'WARNING':  'yellow',
-    'ERROR':    'red',
-    'CRITICAL': 'bold_red',
+    'DEBUG': 'white',
+    'INFO': 'white',
+    'WARNING': 'yellow',
+    'ERROR': 'red',
+    'CRITICAL': 'bold_red'
 }
 
 
 LOG_PREFIXS = {
-    'DEBUG':    '⚙',
-    'INFO':     '⚙',
-    'WARNING':  '⚠️',
-    'ERROR':    '💢',
+    'DEBUG': '⚙',
+    'INFO': '⚙',
+    'WARNING': '⚠️',
+    'ERROR': '💢',
     'CRITICAL': '🚨',
 }
 
