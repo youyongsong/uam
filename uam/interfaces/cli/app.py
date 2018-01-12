@@ -113,7 +113,7 @@ def format_name(app_name, pinned=None):
 def display_app_list(app_lst):
     app_display_lst = []
     for name, versions in app_lst.items():
-        sorted_versions = sorted(versions, key = lambda v: (v["pinned"], v["version"]))
+        sorted_versions = sorted(versions, key=lambda v: (v["pinned"], v["version"]))
         version_display_lst = []
         for v in sorted_versions:
             if v["status"] == AppStatus.Active:

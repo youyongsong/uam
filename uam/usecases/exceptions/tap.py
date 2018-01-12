@@ -1,7 +1,9 @@
 from uam.settings import UamBaseException, ErrorTypes
 
+
 class TapAddError(UamBaseException):
     pass
+
 
 class TapAddConflict(TapAddError):
     help_text = "{} is conflicted with existed taps."
