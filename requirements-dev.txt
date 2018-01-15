@@ -1,0 +1,4 @@
+-r ./requirements.txt
+twine==1.9.1
+invoke==0.22.0
+flake8==3.5.0
