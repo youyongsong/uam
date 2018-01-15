@@ -29,7 +29,7 @@ def recognize_app_name(app_name, taps):
         source_type = SourceTypes.LOCAL
         path = app_name
         app_name = os.path.splitext(os.path.basename(app_name)),
-        formula_lst = [{'tap_name': '', 'path': 'path'}]
+        formula_lst = [{'tap_name': '', 'path': path}]
     else:
         lst = app_name.split('/')
         source_type = SourceTypes.TAP
@@ -166,7 +166,7 @@ def select_proper_version(versions, pinned_version=None):
             versions_lst.append([Version(v, partial=True), v])
         except ValueError:
             logger.warning(f"{v} is not a valid semantic version, "
-                            "ignoring it ...")
+                           "ignoring it ...")
     if not versions_lst:
         logger.error("all versions are not valid semantic version format.")
         raise NoValidVersion()
