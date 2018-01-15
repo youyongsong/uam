@@ -1,4 +1,6 @@
 # uam
+[![CircleCI](https://circleci.com/gh/youyongsong/uam.svg?style=svg)](https://circleci.com/gh/youyongsong/uam)    
+---
 uam is abbreviation of universal application manager.
 
 ## Local Development
@@ -6,7 +8,7 @@ uam project use [invoke](http://docs.pyinvoke.org/en/latest/getting_started.html
 
 ### Prerequirements
 * `python3`, `pip3`
-* run `pip3 install -r requirements.txt` to setup development environment.
+* run `pip3 install -r requirements-dev.txt` to setup development environment.
 
 ### Common Tasks
 * `inv lint`: you should run this command to check your code quality before every time you want to make a commit.

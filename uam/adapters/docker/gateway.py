@@ -44,7 +44,7 @@ class DockerServiceGateway:
     @staticmethod
     def create_volume(vol_name, labels={}):
         logger.info(f"creating docker volume {vol_name} ...")
-        vol = docker_client.volumes.create(vol_name, labels=labels)
+        docker_client.volumes.create(vol_name, labels=labels)
         logger.info(f"volume {vol_name} created.")
 
     @staticmethod

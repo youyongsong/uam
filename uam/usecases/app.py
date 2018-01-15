@@ -134,7 +134,7 @@ def update_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name):
         version = select_proper_version(versions)
     except app_excs.NoValidVersion:
         logger.warning(f"no yaml files inside {formula_folder_path} "
-                        "matches version naming format.")
+                       "matches version naming format.")
         raise NoValidVersion(tap_name)
     if version == app["version"]:
         logger.info("current app's version is already the latest.")
