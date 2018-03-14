@@ -54,9 +54,14 @@ class SystemGateway:
             os.chdir(curdir)
 
     @staticmethod
-    def store_app_shims(shims):
+    def store_app_shims(shims, venv_path=""):
+        if not venv_path:
+            bin_path = BIN_PATH
+        else:
+            bin_path = venv_path
+
         for name, content in shims.items():
-            target_path = os.path.join(BIN_PATH, name)
+            target_path = os.path.join(bin_path, name)
             logger.info(f'creating shim file: {target_path}')
             with open(target_path, 'w') as f_handler:
                 f_handler.write(content)
@@ -65,9 +70,14 @@ class SystemGateway:
             os.chmod(target_path, st.st_mode | stat.S_IEXEC)
 
     @staticmethod
-    def delete_app_shims(shim_names):
+    def delete_app_shims(shim_names, venv_path=""):
+        if not venv_path:
+            bin_path = BIN_PATH
+        else:
+            bin_path = venv_path
+
         for n in shim_names:
-            target_path = os.path.join(BIN_PATH, n)
+            target_path = os.path.join(bin_path, n)
             logger.info(f'removing shim file: {target_path}')
             try:
                 os.remove(target_path)

@@ -31,6 +31,10 @@ TEMP_PATH = os.path.join(UAM_PATH, '.temp')
 if not os.path.exists(TEMP_PATH):
     os.makedirs(TEMP_PATH)
 
+VENVS_PATH = os.path.join(UAM_PATH, "venvs")
+if not os.path.exists(VENVS_PATH):
+    os.makedirs(VENVS_PATH)
+
 
 docker_client = docker.from_env()
 

@@ -41,11 +41,12 @@ class App(Model):
     shell = CharField(max_length=128, default='sh')
     pinned = BooleanField(default=False)
     pinned_version = CharField(max_length=128)
+    venv = CharField(max_length=128, default="")
 
     class Meta:
         database = db
         indexes = (
-            (("name", "version", "pinned"), True),
+            (("name", "version", "pinned", "venv"), True),
         )
 
 

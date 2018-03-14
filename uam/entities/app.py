@@ -60,7 +60,7 @@ def recognize_app_name(app_name, taps):
 
 
 def create_app(source_type, tap_name, app_name, version, formula: str,
-               pinned_version=None):
+               pinned_version=None, venv=""):
     try:
         data = yaml.load(formula)
     except yaml.error.YAMLError as exc:
@@ -81,7 +81,8 @@ def create_app(source_type, tap_name, app_name, version, formula: str,
         'environments': data.get('environments', {}),
         'configs': data.get('configs', []),
         "pinned": False,
-        "pinned_version": ""
+        "pinned_version": "",
+        "venv": venv,
     }
     app['volumes'] = [
         {'name': f'uam-{uuid.uuid4()}', 'path': v['path']}
