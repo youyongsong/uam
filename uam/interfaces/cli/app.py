@@ -1,6 +1,7 @@
 import click
 import crayons
 
+from uam.settings import CURRENT_VENV
 from uam.usecases import app as app_usecases
 from uam.usecases.exceptions import app as app_excs
 from uam.entities.app import AppStatus
@@ -23,20 +24,22 @@ def app():
 def install(app_name, pinned):
     try:
         app = app_usecases.install_app(DatabaseGateway, SystemGateway,
-                                       app_name, pinned_version=pinned)
+                                       app_name, pinned_version=pinned,
+                                       venv=CURRENT_VENV)
     except app_excs.AppEntryPointsConflicted as exc:
         if helper.confirm("Commands '{}' already exist, do you want to override them? "
                           .format(', '.join(exc.conflicted_aliases))):
             app = app_usecases.install_app(DatabaseGateway, SystemGateway,
                                            app_name, override_entrypoints=True,
-                                           pinned_version=pinned)
+                                           pinned_version=pinned, venv=CURRENT_VENV)
         else:
             app = app_usecases.install_app(DatabaseGateway, SystemGateway,
                                            app_name, override_entrypoints=False,
-                                           pinned_version=pinned)
+                                           pinned_version=pinned, venv=CURRENT_VENV)
     if helper.confirm(f"Do you want to download image {app['image']} now?"):
         app_usecases.download_app_image(DatabaseGateway, DockerServiceGateway,
-                                        app["name"], pinned_version=pinned)
+                                        app["name"], pinned_version=pinned,
+                                        venv=CURRENT_VENV)
     helper.echo_success(f"{app['name']} installed.")
 
 
@@ -46,7 +49,8 @@ def install(app_name, pinned):
 @helper.handle_errors()
 def uninstall(app_name, pinned):
     app_usecases.uninstall_app(DatabaseGateway, SystemGateway,
-                               DockerServiceGateway, app_name, pinned_version=pinned)
+                               DockerServiceGateway, app_name, pinned_version=pinned,
+                               venv=CURRENT_VENV)
     helper.echo_success(f"{app_name} uninstalled.")
 
 
@@ -55,12 +59,13 @@ def uninstall(app_name, pinned):
 @click.option("--pinned", default="")
 @helper.handle_errors()
 def exec_app(app_name, pinned):
-    app_usecases.exec_app(DatabaseGateway, SystemGateway, app_name, pinned_version=pinned)
+    app_usecases.exec_app(DatabaseGateway, SystemGateway, app_name,
+                          pinned_version=pinned, venv=CURRENT_VENV)
 
 
 @click.command("ls")
 def list_apps():
-    app_lst = app_usecases.list_apps(DatabaseGateway)
+    app_lst = app_usecases.list_apps(DatabaseGateway, venv=CURRENT_VENV)
     click.echo(display_app_list(app_lst))
 
 
@@ -69,7 +74,8 @@ def list_apps():
 @helper.handle_errors()
 def upgrade_app(app_name):
     click.echo(f"upgrading app {app_name} ...")
-    app_usecases.update_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name)
+    app_usecases.update_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
+                            app_name, venv=CURRENT_VENV)
     helper.echo_success(f"{app_name} upgraded.")
 
 
@@ -79,7 +85,8 @@ def upgrade_app(app_name):
 @helper.handle_errors()
 def active(app_name, pinned):
     click.echo(f"activing app {format_name(app_name, pinned)} ...")
-    app_usecases.active_app(DatabaseGateway, SystemGateway, app_name, pinned)
+    app_usecases.active_app(DatabaseGateway, SystemGateway, app_name, pinned,
+                            venv=CURRENT_VENV)
     helper.echo_success(f"{format_name(app_name, pinned)} actived.")
 
 
@@ -90,7 +97,7 @@ def active(app_name, pinned):
 def reinstall(app_name, pinned):
     click.echo(f"reinstalling app {format_name(app_name, pinned)} ...")
     app_usecases.reinstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
-                               app_name, pinned)
+                               app_name, pinned, venv=CURRENT_VENV)
     helper.echo_success(f"{format_name(app_name, pinned)} reinstalled.")
 
 

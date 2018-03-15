@@ -33,7 +33,7 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
         logger.error(f"{app_name}'s tap name not found in all avaliable tap.'")
         raise AppTapNotFound(app_name)
 
-    if DatabaseGateway.app_exists(app_name, pinned_version=pinned_version):
+    if DatabaseGateway.app_exists(app_name, pinned_version=pinned_version, venv=venv):
         raise AppAlreadyExist(app_name)
 
     # get the formula content
@@ -81,7 +81,7 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
 
     shims = generate_app_shims(app)
 
-    SystemGateway.store_app_shims(shims, venv_path=get_venv_path(venv))
+    SystemGateway.store_app_shims(shims, venv_path=get_venv_path(SystemGateway, venv))
     DatabaseGateway.store_app(app)
     return app
 
@@ -100,7 +100,8 @@ def uninstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
     vol_names = [v['name'] for v in volumes]
     shim_names = [e['alias'] for e in entrypoints]
 
-    SystemGateway.delete_app_shims(shim_names, venv_path=get_venv_path(venv))
+    SystemGateway.delete_app_shims(shim_names,
+                                   venv_path=get_venv_path(SystemGateway, venv))
     DockerServiceGateway.delete_volumes(vol_names)
     DatabaseGateway.delete_app(app_id)
 

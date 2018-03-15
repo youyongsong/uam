@@ -35,6 +35,8 @@ VENVS_PATH = os.path.join(UAM_PATH, "venvs")
 if not os.path.exists(VENVS_PATH):
     os.makedirs(VENVS_PATH)
 
+UAM_VENV_VAR = "UAM_VENV"
+CURRENT_VENV = os.getenv(UAM_VENV_VAR, "")
 
 docker_client = docker.from_env()
 

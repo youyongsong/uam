@@ -154,9 +154,9 @@ class DatabaseGateway:
     @staticmethod
     def get_conflicted_entrypoints(aliases, venv=""):
         return list(set([
-            e.alias for e in EntryPoint.select().where(
+            e.alias for e in EntryPoint.select().join(App).where(
                 (EntryPoint.alias << aliases) & (EntryPoint.enabled == True) &
-                (EntryPoint.app.venv == venv)
+                (App.venv == venv)
             )
         ]))
 
@@ -181,8 +181,8 @@ class DatabaseGateway:
 
     @staticmethod
     def disable_entrypoints(aliases, venv=""):
-        EntryPoint.update(enabled=False).where(
-           (EntryPoint.alias << aliases) & (EntryPoint.app.venv == venv)).execute()
+        EntryPoint.update(enabled=False).join(App).where(
+           (EntryPoint.alias << aliases) & (App.venv == venv)).execute()
 
     @staticmethod
     def delete_entrypoints(app_id, aliases):
