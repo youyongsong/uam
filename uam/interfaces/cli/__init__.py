@@ -3,6 +3,7 @@ import click
 from . import tap
 from . import app
 from . import system
+from . import venv
 
 
 @click.group()
@@ -62,3 +63,4 @@ uam.add_command(init)
 uam.add_command(tap.tap)
 uam.add_command(app.app)
 uam.add_command(system.system)
+uam.add_command(venv.venv)
