@@ -54,12 +54,20 @@ def init(ctx):
     ctx.forward(system.init)
 
 
+@click.command()
+@click.argument("venv_name")
+@click.pass_context
+def workon(ctx, venv_name):
+    ctx.forward(venv.active)
+
+
 uam.add_command(install)
 uam.add_command(uninstall)
 uam.add_command(shell)
 uam.add_command(ls)
 uam.add_command(upgrade)
 uam.add_command(init)
+uam.add_command(workon)
 uam.add_command(tap.tap)
 uam.add_command(app.app)
 uam.add_command(system.system)
