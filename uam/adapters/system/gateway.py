@@ -6,6 +6,8 @@ import subprocess
 import sys
 import shutil
 
+import pexpect
+
 from uam.settings import BIN_PATH, TEMP_PATH
 from uam.adapters.system.exceptions import YamlFileNotExist
 
@@ -26,6 +28,20 @@ class SystemGateway:
             os.makedirs(path)
 
     @staticmethod
+    def remove_folder(path):
+        if os.path.exists(path):
+            shutil.rmtree(path)
+
+    @staticmethod
+    def list_folders(path):
+        if not os.path.exists(path):
+            return []
+        return [
+            f for f in os.listdir(path)
+            if os.path.isdir(os.path.join(path, f))
+        ]
+
+    @staticmethod
     def clone_repo(target_path, target_name, git_addr):
         curdir = os.path.abspath(os.curdir)
         try:
@@ -41,7 +57,7 @@ class SystemGateway:
 
     @staticmethod
     def remove_repo(repo_path):
-        shutil.rmtree(repo_path)
+        SystemGateway.remove_folder(repo_path)
 
     @staticmethod
     def update_repo(repo_path, git_addr):
@@ -54,9 +70,14 @@ class SystemGateway:
             os.chdir(curdir)
 
     @staticmethod
-    def store_app_shims(shims):
+    def store_app_shims(shims, venv_path=""):
+        if not venv_path:
+            bin_path = BIN_PATH
+        else:
+            bin_path = venv_path
+
         for name, content in shims.items():
-            target_path = os.path.join(BIN_PATH, name)
+            target_path = os.path.join(bin_path, name)
             logger.info(f'creating shim file: {target_path}')
             with open(target_path, 'w') as f_handler:
                 f_handler.write(content)
@@ -65,9 +86,14 @@ class SystemGateway:
             os.chmod(target_path, st.st_mode | stat.S_IEXEC)
 
     @staticmethod
-    def delete_app_shims(shim_names):
+    def delete_app_shims(shim_names, venv_path=""):
+        if not venv_path:
+            bin_path = BIN_PATH
+        else:
+            bin_path = venv_path
+
         for n in shim_names:
-            target_path = os.path.join(BIN_PATH, n)
+            target_path = os.path.join(bin_path, n)
             logger.info(f'removing shim file: {target_path}')
             try:
                 os.remove(target_path)
@@ -77,17 +103,28 @@ class SystemGateway:
                 logger.info('{} removed.'.format(target_path))
 
     @staticmethod
-    def run_temporay_script(shim, arguments=''):
+    def run_temporay_script(script, executor=sys.executable, arguments=''):
         target_path = os.path.join(TEMP_PATH, f'uam-shell-{uuid.uuid4()}')
         logger.info(f'creating temporay script {target_path}')
         with open(target_path, 'w') as f_handler:
-            f_handler.write(shim)
+            f_handler.write(script)
         try:
-            subprocess.run(f'{sys.executable} {target_path} {arguments}',
+            subprocess.run(f'{executor} {target_path} {arguments}',
                            shell=True)
         finally:
             logger.info(f'deleting temporay script {target_path}')
             os.remove(target_path)
+
+    @staticmethod
+    def run_shell(shell_path, post_commands=[], post_msg=None):
+        process = pexpect.spawn(shell_path)
+        process.expect("\r\n")
+        for cmd in post_commands:
+            process.sendline(cmd)
+        process.sendline("clear")
+        if post_msg:
+            process.write(post_msg)
+        process.interact()
 
     @staticmethod
     def list_yaml_names(folder):
@@ -110,3 +147,13 @@ class SystemGateway:
         with open(path, "r") as f_handler:
             content = f_handler.read()
         return content
+
+    @staticmethod
+    def getenv(envvar):
+        return os.getenv(envvar)
+
+    @staticmethod
+    def get_ps1_str():
+        shell_path = os.environ.get("SHELL")
+        return subprocess.check_output(
+            [shell_path, "-c", "-i", "echo $PS1"]).decode().strip()

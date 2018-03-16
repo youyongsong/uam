@@ -59,28 +59,32 @@ class DatabaseGateway:
         return False
 
     @staticmethod
-    def app_exists(name, pinned_version=None):
+    def app_exists(name, pinned_version=None, venv=""):
         if pinned_version:
             if App.select().where(
                 (App.name == name) & (App.pinned == True) &
-                (App.pinned_version == pinned_version)
+                (App.pinned_version == pinned_version) &
+                (App.venv == venv)
             ):
                 return True
             return False
         else:
             if App.select().where(
-                (App.name == name) & (App.pinned == False)
+                (App.name == name) & (App.pinned == False) &
+                (App.venv == venv)
             ):
                 return True
             return False
 
     @staticmethod
-    def get_app_id(name, pinned_version=None):
+    def get_app_id(name, pinned_version=None, venv=""):
         if not pinned_version:
-            query = ((App.name == name) & (App.pinned == False))
+            query = ((App.name == name) & (App.pinned == False) &
+                     (App.venv == venv))
         else:
             query = ((App.name == name) & (App.pinned == True) &
-                     (App.pinned_version == pinned_version))
+                     (App.pinned_version == pinned_version) &
+                     (App.venv == venv))
         try:
             app = App.get(query)
         except App.DoesNotExist as error:
@@ -90,12 +94,14 @@ class DatabaseGateway:
         return app.id
 
     @staticmethod
-    def get_app_detail(name, pinned_version=None):
+    def get_app_detail(name, pinned_version=None, venv=""):
         if not pinned_version:
-            query = ((App.name == name) & (App.pinned == False))
+            query = ((App.name == name) & (App.pinned == False) &
+                     (App.venv == venv))
         else:
             query = ((App.name == name) & (App.pinned == True) &
-                     (App.pinned_version == pinned_version))
+                     (App.pinned_version == pinned_version) &
+                     (App.venv == venv))
         try:
             app = App.get(query)
         except App.DoesNotExist as error:
@@ -110,9 +116,11 @@ class DatabaseGateway:
         return _build_app_data(app)
 
     @staticmethod
-    def list_apps():
+    def list_apps(venv=""):
         return [
-            _build_app_data(app) for app in App.select()
+            _build_app_data(app) for app in App.select().where(
+                App.venv == venv
+            )
         ]
 
     @staticmethod
@@ -144,10 +152,11 @@ class DatabaseGateway:
         App.get(App.id == app_id).delete_instance(recursive=True)
 
     @staticmethod
-    def get_conflicted_entrypoints(aliases):
+    def get_conflicted_entrypoints(aliases, venv=""):
         return list(set([
-            e.alias for e in EntryPoint.select().where(
-                (EntryPoint.alias << aliases) & (EntryPoint.enabled == True)
+            e.alias for e in EntryPoint.select().join(App).where(
+                (EntryPoint.alias << aliases) & (EntryPoint.enabled == True) &
+                (App.venv == venv)
             )
         ]))
 
@@ -171,8 +180,9 @@ class DatabaseGateway:
         ).execute()
 
     @staticmethod
-    def disable_entrypoints(aliases):
-        EntryPoint.update(enabled=False).where(EntryPoint.alias << aliases).execute()
+    def disable_entrypoints(aliases, venv=""):
+        EntryPoint.update(enabled=False).join(App).where(
+           (EntryPoint.alias << aliases) & (App.venv == venv)).execute()
 
     @staticmethod
     def delete_entrypoints(app_id, aliases):
