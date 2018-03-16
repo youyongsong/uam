@@ -39,7 +39,7 @@ class SystemGateway:
         return [
             f for f in os.listdir(path)
             if os.path.isdir(os.path.join(path, f))
-        ] 
+        ]
 
     @staticmethod
     def clone_repo(target_path, target_name, git_addr):
