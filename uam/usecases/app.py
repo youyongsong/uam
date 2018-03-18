@@ -40,6 +40,7 @@ def install_app(DatabaseGateway, SystemGateway, app_name,
     if source_type == SourceTypes.LOCAL:
         formula_content = SystemGateway.read_yaml_content(formula_lst[0]['path'])
         tap_name = None
+        version = None
     else:
         for formula in formula_lst:
             if SystemGateway.isfolder(formula['path']):

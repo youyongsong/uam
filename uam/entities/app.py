@@ -28,7 +28,7 @@ def recognize_app_name(app_name, taps):
     if app_name.startswith(('.', '/')):
         source_type = SourceTypes.LOCAL
         path = app_name
-        app_name = os.path.splitext(os.path.basename(app_name)),
+        app_name = os.path.splitext(os.path.basename(app_name))[0]
         formula_lst = [{'tap_name': '', 'path': path}]
     else:
         lst = app_name.split('/')

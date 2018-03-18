@@ -33,8 +33,8 @@ class Tap(Model):
 class App(Model):
     name = CharField(max_length=64)
     source_type = CharField(max_length=32, choices=APP_SOURCE_TYPES)
-    tap_alias = CharField(max_length=128)
-    version = CharField(max_length=128)
+    tap_alias = CharField(max_length=128, null=True)
+    version = CharField(max_length=128, null=True)
     description = TextField(default='')
     image = TextField()
     environments = JSONField(default='{}')
