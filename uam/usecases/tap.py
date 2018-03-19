@@ -68,6 +68,7 @@ def update_tap(SystemGateway, DatabaseGateway, alias=None):
     if not alias:
         for t in list_taps(DatabaseGateway):
             update_tap(SystemGateway, DatabaseGateway, alias=t['alias'])
+        return
 
     address = get_address_by_alias(alias, list_taps(DatabaseGateway))
     git_addr = complete_shorten_address(address)
