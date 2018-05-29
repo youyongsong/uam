@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class SystemGateway:
+    @staticmethod
+    def isfile(path):
+        return os.path.exists(path)
 
     @staticmethod
     def isfolder(path):

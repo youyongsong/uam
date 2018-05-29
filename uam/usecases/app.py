@@ -166,12 +166,13 @@ def update_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name,
 
 
 def reinstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway, app_name,
-                  pinned_version=None, venv=""):
+                  pinned_version=None, venv="", formula_path=""):
     app = _get_app_from_db(DatabaseGateway, app_name, pinned_version=pinned_version,
                            venv=venv)
 
     logger.info(f"reading {app_name}'s formula ...")
-    formula_path = build_formula_path(app["tap_alias"], app_name, app["version"])
+    if app["source_type"] == SourceTypes.TAP:
+        formula_path = build_formula_path(app["tap_alias"], app_name, app["version"])
     formula_content = SystemGateway.read_yaml_content(formula_path)
 
     logger.info("rebuilding app data from formula ...")
@@ -220,7 +221,7 @@ def active_app(DatabaseGateway, SystemGateway, app_name, pinned_version=None,
     logger.info("regenerating app's shims ...")
     app = DatabaseGateway.retrieve_app_detail(app["id"], venv=venv)
     shims = generate_app_shims(app)
-    SystemGateway.store_app_shims(shims, venv=venv)
+    SystemGateway.store_app_shims(shims, venv_path=get_venv_path(SystemGateway, venv))
 
 
 def _get_app_from_db(DatabaseGateway, app_name, pinned_version=None, venv=""):
@@ -283,7 +284,7 @@ def _apply_change_set(DatabaseGateway, SystemGateway, DockerServiceGateway,
     logger.info("regenerating all shims ...")
     app_data = DatabaseGateway.retrieve_app_detail(app_id)
     shims = generate_app_shims(app_data)
-    SystemGateway.store_app_shims(shims, venv=venv)
+    SystemGateway.store_app_shims(shims, venv_path=get_venv_path(SystemGateway, venv))
 
 
 def download_app_image(DatabaseGateway, DockerServiceGateway, app_name, pinned_version=None, venv=""):

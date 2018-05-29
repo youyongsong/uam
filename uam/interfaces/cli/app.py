@@ -92,12 +92,13 @@ def active(app_name, pinned):
 
 @click.command()
 @click.argument("app_name")
+@click.argument("formula_path", default="")
 @click.option("--pinned", default="")
 @helper.handle_errors()
-def reinstall(app_name, pinned):
+def reinstall(app_name, formula_path, pinned):
     click.echo(f"reinstalling app {format_name(app_name, pinned)} ...")
     app_usecases.reinstall_app(DatabaseGateway, SystemGateway, DockerServiceGateway,
-                               app_name, pinned, venv=CURRENT_VENV)
+                               app_name, pinned, venv=CURRENT_VENV, formula_path=formula_path)
     helper.echo_success(f"{format_name(app_name, pinned)} reinstalled.")
 
 
