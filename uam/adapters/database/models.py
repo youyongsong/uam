@@ -37,7 +37,7 @@ class App(Model):
     version = CharField(max_length=128, null=True)
     description = TextField(default='')
     image = TextField()
-    environments = JSONField(default='{}')
+    environments = JSONField(default='[]')
     shell = CharField(max_length=128, default='sh')
     pinned = BooleanField(default=False)
     pinned_version = CharField(max_length=128)
