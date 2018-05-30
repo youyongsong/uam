@@ -60,17 +60,31 @@ options['image'] = '{{ app.image }}'
 options['entrypoint'] = '{{ entrypoint.container_entrypoint }}'
 options['command'] = '{{ entrypoint.container_arguments }}'
 
-options['environment'] = {}
 AUTO_ENV_PATTERN = re.compile(r'^\$\{(?P<env_name>.*)\}$')
-{% for k, v in app.environments.items() %}
-matched = AUTO_ENV_PATTERN.match('{{ v }}')
-if matched:
-    name = matched.groupdict().get('env_name')
-    val = os.getenv(name)
+GROUP_ENV_PATTERN = re.compile(r'^/(?P<name_pattern>.*)/$')
+options['environment'] = {}
+{% for k, v in app.environments %}
+if "{{ k }}" != "@":
+    auto_env_matched = AUTO_ENV_PATTERN.match("{{ v }}")
+    if auto_env_matched:
+        val = os.getenv(auto_env_matched.groupdict().get('env_name'))
+    else:
+        val = "{{ v }}"
     if val:
         options['environment']['{{ k }}'] = val
-else:
-    options['environment']['{{ k }}'] = '{{ v }}'
+if "{{ k }}" == "@":
+    auto_env_matched = AUTO_ENV_PATTERN.match("{{ v }}")
+    group_env_matched = GROUP_ENV_PATTERN.match("{{ v }}")
+    if group_env_matched:
+        name_pattern = re.compile(group_env_matched.groupdict().get("name_pattern"))
+        for key in os.environ.keys():
+            if name_pattern.match(key):
+                options['environment'][key] = os.environ[key]
+    elif auto_env_matched:
+        env_name = auto_env_matched.groupdict().get('env_name')
+        val = os.getenv(env_name)
+        if val:
+            options["environment"][env_name] = val
 {% endfor %}
 
 options['volumes'] = {}
